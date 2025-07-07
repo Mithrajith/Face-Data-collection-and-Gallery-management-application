@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Tuple, Union, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Request, Depends
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 import base64
@@ -24,6 +24,8 @@ import random
 import albumentations as A
 import sys
 from dotenv import load_dotenv
+from fastapi.security import OAuth2PasswordBearer
+import hashlib
 
 # Load environment variables at module level
 load_dotenv()
@@ -1466,12 +1468,97 @@ async def process_students_videos(dept: str, year: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing students: {str(e)}")
 
+# --- User Authentication and Admin Management ---
+DB_PATH = os.path.join(BASE_DIR, 'data', 'app.db')
+
+def get_db_conn():
+    return sqlite3.connect(DB_PATH)
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def create_users_table():
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        role TEXT NOT NULL CHECK(role IN ('superadmin', 'admin'))
+    )''')
+    conn.commit()
+    conn.close()
+
+create_users_table()
+
+@app.post('/api/login')
+async def login(data: dict):
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return {"success": False, "message": "Username and password required"}
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute('SELECT password, role FROM users WHERE username = ?', (username,))
+    row = c.fetchone()
+    conn.close()
+    if row and row[0] == hash_password(password):
+        return {"success": True, "role": row[1]}
+    return {"success": False, "message": "Invalid credentials"}
+
+@app.post('/api/add-admin')
+async def add_admin(data: dict):
+    username = data.get('username')
+    password = data.get('password')
+    role = data.get('role', 'admin')
+    if not username or not password:
+        return {"success": False, "message": "Username and password required"}
+    if role not in ('admin', 'superadmin'):
+        return {"success": False, "message": "Invalid role"}
+    try:
+        conn = get_db_conn()
+        c = conn.cursor()
+        c.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+                  (username, hash_password(password), role))
+        conn.commit()
+        conn.close()
+        return {"success": True, "message": f"Admin '{username}' added."}
+    except sqlite3.IntegrityError:
+        return {"success": False, "message": "Username already exists."}
+
+@app.delete('/api/admins/{username}')
+async def delete_admin(username: str):
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute("DELETE FROM users WHERE username = ?", (username,))
+    conn.commit()
+    deleted = c.rowcount
+    conn.close()
+    if deleted:
+        return {"success": True, "message": f"Admin '{username}' deleted."}
+    else:
+        return {"success": False, "message": f"Admin '{username}' not found."}
+
+@app.get('/api/admins')
+async def list_admins():
+    """Return all admins and superadmins from the users table"""
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute("SELECT username, role FROM users WHERE role IN ('admin', 'superadmin') ORDER BY role DESC, username ASC")
+    admins = [{"username": row[0], "role": row[1]} for row in c.fetchall()]
+    conn.close()
+    return {"success": True, "admins": admins}
+
 @app.get("/api/collection-app-config", summary="Get face collection app configuration")
 async def get_collection_app_config():
     return {
         "host": collection_app_host,
         "port": collection_app_port
     }
+
+
+
+
 
 if __name__ == "__main__":
     import uvicorn

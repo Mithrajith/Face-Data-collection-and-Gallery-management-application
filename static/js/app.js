@@ -1,3 +1,11 @@
+// At the very top of app.js, before any other logic:
+(function() {
+    // If not logged in, redirect to login page
+    if (!localStorage.getItem('userRole')) {
+        window.location.href = '/static/login.html';
+    }
+})();
+
 const API_BASE_URL = '';  // Empty string for same-origin requests
 
 // State management for collection app
@@ -2135,7 +2143,7 @@ async function handleLoadStudentData(event) {
         showAlert('error', error.message);
     } finally {
         if (btnLoad) {
-            btnLoad.disabled = false;
+            btnLoad
             btnLoad.innerHTML = '<i class="fas fa-search me-2"></i>Load Student Data';
         }
     }
@@ -2281,4 +2289,125 @@ async function handleViewPendingStudents() {
         showAlert('error', error.message);
     }
 }
+
+// Add at the top: check login and redirect if not logged in
+(function() {
+    if (!localStorage.getItem('userRole')) {
+        window.location.href = '/static/login.html';
+    }
+})();
+
+// Show/hide Add Admin container based on userRole
+document.addEventListener('DOMContentLoaded', function() {
+    // Show/hide Add Admin container based on userRole
+    const userRole = localStorage.getItem('userRole');
+    const addAdminContainer = document.getElementById('addAdminContainer');
+    const addBatchContainer = document.getElementById('addBatchContainer');
+    const addDepartmentContainer = document.getElementById('addDepartmentContainer');
+    const adminRow = document.getElementById('adminRow'); // The row containing all three containers
+
+    if (addAdminContainer && addBatchContainer && addDepartmentContainer && adminRow) {
+        if (userRole !== 'superadmin') {
+            // For admin: show only Add Batch and Add Department, stacked vertically with spacing
+            addAdminContainer.style.display = 'none';
+            addBatchContainer.className = 'card mb-3';
+            addDepartmentContainer.className = 'card mb-3';
+            // Remove horizontal row layout
+            adminRow.className = '';
+        } else {
+            // For superadmin: show all three in a horizontal row
+            addAdminContainer.style.display = 'block';
+            addBatchContainer.className = 'card col-md-4 mb-0';
+            addDepartmentContainer.className = 'card col-md-4 mb-0';
+            addAdminContainer.className = 'card col-md-4 mb-0';
+            adminRow.className = 'row g-2';
+        }
+    }
+});
+
+// --- Admin List Display and Delete Logic (Superadmin Only) ---
+document.addEventListener('DOMContentLoaded', function() {
+    const userRole = localStorage.getItem('userRole');
+    if (userRole === 'superadmin') {
+        loadAdminList();
+    }
+});
+
+async function loadAdminList() {
+    const adminListContainer = document.getElementById('adminListContainer');
+    if (!adminListContainer) return;
+    adminListContainer.innerHTML = '<div class="text-center text-muted">Loading admins...</div>';
+    try {
+        const res = await fetch('/api/admins');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.admins)) {
+            if (data.admins.length <= 1) {
+                adminListContainer.innerHTML = '<div class="text-muted">No admins found.</div>';
+                return;
+            }
+            let html = '<ul class="list-group admin-list-scroll" style="max-height: 180px; overflow-y: auto;">';
+            // Skip the first admin (row 1)
+            data.admins.slice(1).forEach(admin => {
+                let adminName = '';
+                if (typeof admin === 'object' && admin !== null) {
+                    adminName = admin.username || admin.name || admin.id || JSON.stringify(admin);
+                } else {
+                    adminName = admin;
+                }
+                html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>${adminName}</span>
+                    <button class="btn btn-sm btn-danger delete-admin-btn" data-username="${adminName}"><i class="fas fa-trash-alt"></i></button>
+                </li>`;
+            });
+            html += '</ul>';
+            adminListContainer.innerHTML = html;
+            // Add delete event listeners
+            document.querySelectorAll('.delete-admin-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const username = this.getAttribute('data-username');
+                    if (confirm(`Are you sure you want to delete admin '${username}'?`)) {
+                        const res = await fetch(`/api/admins/${encodeURIComponent(username)}`, { method: 'DELETE' });
+                        const result = await res.json();
+                        if (result.success) {
+                            showAlert('success', `Admin '${username}' deleted.`);
+                            loadAdminList();
+                        } else {
+                            showAlert('error', result.message || 'Failed to delete admin');
+                        }
+                    }
+                });
+            });
+        } else {
+            adminListContainer.innerHTML = '<div class="text-danger">Failed to load admins.</div>';
+        }
+    } catch (err) {
+        adminListContainer.innerHTML = '<div class="text-danger">Error loading admins.</div>';
+    }
+}
+
+// Add Admin form submission (only for superadmin)
+document.addEventListener('DOMContentLoaded', function() {
+    const addAdminForm = document.getElementById('addAdminForm');
+    if (addAdminForm) {
+        addAdminForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const res = await fetch('/api/add-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role: 'admin' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showAlert('success', 'Admin added successfully');
+                document.getElementById('adminUsername').value = '';
+                document.getElementById('adminPassword').value = '';
+                loadAdminList();
+            } else {
+                showAlert('error', data.message || 'Failed to add admin');
+            }
+        });
+    }
+});
 
