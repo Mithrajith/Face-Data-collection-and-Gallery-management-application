@@ -226,30 +226,52 @@ class VideoQualityChecker:
         """Check quality for all students in a department-year folder"""
         dept_year_dir = os.path.join(student_data_dir, f"{dept}_{year}")
         
+        print(f"Checking quality for directory: {dept_year_dir}")
+        
         if not os.path.exists(dept_year_dir):
+            print(f"Directory not found: {dept_year_dir}")
             return {
                 'error': f"Directory not found: {dept_year_dir}",
                 'passed_students': [],
                 'failed_students': [],
-                'borderline_students': []
+                'borderline_students': [],
+                'total_checked': 0
             }
         
         passed_students = []
         failed_students = []
         borderline_students = []
+        total_processed = 0
+        
+        # Get all subdirectories in the dept_year directory
+        try:
+            student_dirs = [d for d in os.listdir(dept_year_dir) 
+                          if os.path.isdir(os.path.join(dept_year_dir, d))]
+            print(f"Found {len(student_dirs)} student directories: {student_dirs}")
+        except Exception as e:
+            print(f"Error listing directory {dept_year_dir}: {e}")
+            return {
+                'error': f"Error accessing directory: {str(e)}",
+                'passed_students': [],
+                'failed_students': [],
+                'borderline_students': [],
+                'total_checked': 0
+            }
         
         # Process each student directory
-        for student_id in os.listdir(dept_year_dir):
+        for student_id in student_dirs:
             student_path = os.path.join(dept_year_dir, student_id)
-            
-            if not os.path.isdir(student_path):
-                continue
             
             # Check if student has a video file
             video_path = os.path.join(student_path, f"{student_id}.mp4")
             json_path = os.path.join(student_path, f"{student_id}.json")
             
+            print(f"Checking student {student_id}:")
+            print(f"  Video path: {video_path} (exists: {os.path.exists(video_path)})")
+            print(f"  JSON path: {json_path} (exists: {os.path.exists(json_path)})")
+            
             if not os.path.exists(video_path) or not os.path.exists(json_path):
+                print(f"  Skipping - missing files")
                 continue
             
             # Load student data
@@ -257,9 +279,12 @@ class VideoQualityChecker:
                 with open(json_path, 'r') as f:
                     student_data = json.load(f)
                 
-                # Skip if already processed
+                # Skip if already processed (faces extracted)
                 if student_data.get('facesExtracted', False):
+                    print(f"  Skipping - already processed")
                     continue
+                
+                print(f"  Processing quality check for {student_id}")
                 
                 # Check video quality
                 quality_result = self.check_single_video_quality(video_path)
@@ -277,6 +302,9 @@ class VideoQualityChecker:
                 with open(json_path, 'w') as f:
                     json.dump(student_data, f, indent=2)
                 
+                print(f"  Quality category: {quality_result['category']}")
+                print(f"  Quality issues: {quality_result.get('quality_issues', [])}")
+                
                 # Categorize student based on quality category
                 if quality_result['category'] == 'pass':
                     passed_students.append(student_id)
@@ -287,14 +315,22 @@ class VideoQualityChecker:
                     })
                 else:  # fail
                     failed_students.append(student_id)
+                
+                total_processed += 1
                     
             except Exception as e:
                 print(f"Error processing student {student_id}: {e}")
                 continue
         
+        print(f"Quality check completed:")
+        print(f"  Total processed: {total_processed}")
+        print(f"  Passed: {len(passed_students)}")
+        print(f"  Borderline: {len(borderline_students)}")
+        print(f"  Failed: {len(failed_students)}")
+        
         return {
             'passed_students': passed_students,
             'failed_students': failed_students,
             'borderline_students': borderline_students,
-            'total_checked': len(passed_students) + len(failed_students) + len(borderline_students)
+            'total_checked': total_processed
         }
