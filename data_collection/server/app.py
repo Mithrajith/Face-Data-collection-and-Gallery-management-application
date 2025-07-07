@@ -169,12 +169,11 @@ def start_session():
         return jsonify({"error": "No data provided"}), 400
         
     student_id = data.get('studentId')  # Registration Number
-    name = data.get('name')
     year = data.get('year')
     dept = data.get('dept')
     
-    if not all([student_id, name, year, dept]):
-        return jsonify({"error": "All student details are required"}), 400
+    if not all([student_id, year, dept]):
+        return jsonify({"error": "Student ID, year, and department are required"}), 400
     
     # Create unique session ID
     session_id = str(uuid.uuid4())
@@ -191,7 +190,6 @@ def start_session():
     session_data = {
         "sessionId": session_id,
         "regNo": student_id,
-        "name": name,
         "year": year,
         "dept": dept,
         "batch": f"Batch{year}",  # Create batch from year
@@ -216,7 +214,7 @@ def upload_video(session_id):
     
     file = request.files['video']
     student_id = request.form.get('studentId')
-    name = request.form.get('name')
+    # name = request.form.get('name')
     year = request.form.get('year')
     dept = request.form.get('dept')
     
@@ -402,8 +400,8 @@ def upload_video(session_id):
         session_data["videoPath"] = mp4_path  # Store video path for reference
         
         # Update additional fields if provided in form data
-        if name:
-            session_data["name"] = name
+        # if name:
+        #     session_data["name"] = name
         if year:
             session_data["year"] = year
         if dept:

@@ -1,4 +1,4 @@
-    document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
     // Check for secure context
     if (!navigator.mediaDevices) {
         // Create error message
@@ -42,7 +42,6 @@
     const state = {
         sessionId: null,
         studentId: null,
-        name: null,
         year: null,
         dept: null,
         mediaRecorder: null,
@@ -69,90 +68,88 @@
     
 
     async function loadBatchYearsAndDepartments() {
-        const yearSelect = document.getElementById('year');
-        const deptSelect = document.getElementById('dept');
-        
-        if (!yearSelect || !deptSelect) return; // Guard clause if elements don't exist
-        
-        try {
-            // Fetch years and departments from the API
-            const response = await fetch('/api/batches');
-            if (response.ok) {
-            const data = await response.json();
-            
-            // Populate year dropdown
-            yearSelect.innerHTML = '<option value="">Select Year</option>';
-            if (data.years && Array.isArray(data.years)) {
-                data.years.forEach(year => {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                yearSelect.appendChild(option);
-                });
-            }
+        const regNoInput = document.getElementById('studentId');
+        const yearField = document.getElementById('year');
+        const deptField = document.getElementById('dept');
 
-            deptSelect.innerHTML = '<option value="">Select Department</option>';
-            if (data.departments && Array.isArray(data.departments)) {
-                data.departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept.id || dept.name; // Use id if available, otherwise name
-                option.textContent = dept.name;
-                deptSelect.appendChild(option);
-                });
-            }
+        regNoInput.addEventListener("input", () => {
+            const regNo = regNoInput.value.trim();
+
+            if (/^\d{12}$/.test(regNo)) {
+                const pattern = /^(\d{4})(\d{2})(\d{3})(\d{3})$/;
+                const match = regNo.match(pattern);
+
+                if (match) {
+                    const [, firstPart, year, deptCode, rollNo] = match;
+
+                    const fullYear = 2000 + parseInt(year);
+                    const gradYear = fullYear + 4;
+
+                    yearField.value = `${fullYear} - ${gradYear}`;
+
+                    deptField.value = deptCode;
+                }
             } else {
-            console.error('Failed to fetch batch data:', response.status);
-            // Provide fallback values if API call fails
-            populateFallbackOptions(yearSelect, deptSelect);
+                yearField.value = "";
+                deptField.value = "";
             }
-        } catch (error) {
-            console.error('Error loading batch data:', error);
-            // Provide fallback values if API call fails
-            populateFallbackOptions(yearSelect, deptSelect);
-        }
+        });
     }
-
     // Call the function after DOM is loaded
     loadBatchYearsAndDepartments();
 
 
 
     // Handle student form submission
-    async function handleFormSubmit(event) {
-        event.preventDefault();
-        
-        state.studentId = document.getElementById('studentId').value;
-        state.name = document.getElementById('name').value;
-        state.year = document.getElementById('year').value;
-        state.dept = document.getElementById('dept').value;
-        
-        try {
-            const response = await fetch(`${config.apiBase}/session/start`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    studentId: state.studentId,
-                    name: state.name,
-                    year: state.year,
-                    dept: state.dept
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                state.sessionId = data.sessionId;
-                initCamera();
-            } else {
-                alert(`Error: ${data.message || 'Failed to start session'}`);
-            }
-        } catch (error) {
-            console.error('Error starting session:', error);
-            alert('Failed to connect to the server. Please try again.');
-        }
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    state.studentId = document.getElementById('studentId').value;
+    state.year = document.getElementById('year').value; // Get the year from the form
+    state.dept = document.getElementById('dept').value;
+
+    // Validate that year field has a value
+    if (!state.year) {
+        alert('Please enter a valid registration number to auto-fill the year field.');
+        return;
     }
+
+    // Handle year splitting safely
+    let passOutYear;
+    if (state.year.includes(' - ')) {
+        const [batchYear, gradYear] = state.year.split(" - ");
+        passOutYear = gradYear;
+    } else {
+        passOutYear = state.year;
+    }
+
+    try {
+        const response = await fetch(`${config.apiBase}/session/start`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                studentId: state.studentId,
+                year: passOutYear,
+                dept: state.dept
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            state.sessionId = data.sessionId;
+            // Call initCamera directly since it's in the same scope
+            await initCamera();
+        } else {
+            alert(`Error: ${data.message || 'Failed to start session'}`);
+        }
+    } catch (error) {
+        console.error('Error starting session:', error);
+        alert('Failed to connect to the server. Please try again.');
+    }
+}
 
 async function startRecording() {
   const startRecordBtn = document.getElementById('startRecord');
@@ -290,8 +287,16 @@ async function uploadVideo(blob) {
     const formData = new FormData();
     formData.append('video', blob, `student_${state.studentId}_video.webm`);
     formData.append('studentId', state.studentId);
-    formData.append('name', state.name);
-    formData.append('year', state.year);
+    
+    // Extract graduation year from state.year if it contains a range
+    let passOutYear;
+    if (state.year && state.year.includes(' - ')) {
+        passOutYear = state.year.split(' - ')[1];
+    } else {
+        passOutYear = state.year;
+    }
+    
+    formData.append('year', passOutYear);
     formData.append('dept', state.dept);
 
     try {
@@ -350,7 +355,6 @@ async function uploadVideo(blob) {
         // Reset state
         state.sessionId = null;
         state.studentId = null;
-        state.name = null;
         state.year = null;
         state.dept = null;
         state.mediaRecorder = null;
