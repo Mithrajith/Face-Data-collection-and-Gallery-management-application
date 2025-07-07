@@ -45,6 +45,7 @@ GALLERY_DIR = os.path.join(BASE_DIR, 'gallery')
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from gallery_manager import create_gallery, update_gallery, load_model, extract_embedding, create_gallery_from_embeddings, update_gallery_from_embeddings
 import database
+from quality_checker import VideoQualityChecker
 
 # Default paths using relative paths
 DEFAULT_MODEL_PATH = os.path.join(BASE_DIR, "src", "checkpoints", "LightCNN_29Layers_V2_checkpoint.pth.tar")
@@ -57,6 +58,16 @@ STUDENT_DATA_DIR = os.path.join(BASE_DIR, "data", "student_data")
 os.makedirs(BASE_DATA_DIR, exist_ok=True)
 os.makedirs(BASE_GALLERY_DIR, exist_ok=True)
 os.makedirs(STUDENT_DATA_DIR, exist_ok=True)
+
+# Global quality checker instance
+DEFAULT_QUALITY_CHECKER = None
+
+def get_quality_checker():
+    """Get or create quality checker instance"""
+    global DEFAULT_QUALITY_CHECKER
+    if DEFAULT_QUALITY_CHECKER is None:
+        DEFAULT_QUALITY_CHECKER = VideoQualityChecker(DEFAULT_YOLO_PATH)
+    return DEFAULT_QUALITY_CHECKER
 
 app = FastAPI(title="Face Recognition Gallery Manager", 
               description="API for managing face recognition galleries for students by batch and department")
@@ -104,6 +115,13 @@ class StudentInfo(BaseModel):
     facesOrganized: bool
     videoPath: str
     facesCount: int
+    qualityCheck: str = "not_tested"  # "not_tested", "pass", "fail"
+    qualityCategory: str = "not_tested"  # "not_tested", "pass", "borderline", "fail"
+    qualityDetails: Dict[str, Any] = {}
+    qualityIssues: List[str] = []
+    criticalIssues: List[str] = []
+    majorIssues: List[str] = []
+    minorIssues: List[str] = []
 
 class StudentDataSummary(BaseModel):
     total_students: int
@@ -1424,6 +1442,176 @@ def process_student_video(student: StudentInfo) -> Dict[str, Any]:
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@app.post("/student-data/{dept}/{year}/quality-check", 
+          summary="Check quality of student videos")
+async def check_student_data_quality(dept: str, year: str):
+    """Check quality of all student videos in a department-year before processing"""
+    try:
+        quality_checker = get_quality_checker()
+        result = quality_checker.check_student_data_quality(dept, year, STUDENT_DATA_DIR)
+        
+        if 'error' in result:
+            raise HTTPException(status_code=404, detail=result['error'])
+        
+        return {
+            "success": True,
+            "message": f"Quality check completed for {dept} {year}",
+            "passed_students": result['passed_students'],
+            "failed_students": result['failed_students'],
+            "borderline_students": result['borderline_students'],
+            "total_checked": result['total_checked'],
+            "pass_rate": len(result['passed_students']) / result['total_checked'] * 100 if result['total_checked'] > 0 else 0
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error checking quality: {str(e)}")
+
+@app.delete("/student-data/{dept}/{year}/failed-quality", 
+           summary="Delete student data that failed quality check")
+async def delete_failed_quality_data(dept: str, year: str):
+    """Delete student data that failed quality check"""
+    try:
+        dept_year_dir = os.path.join(STUDENT_DATA_DIR, f"{dept}_{year}")
+        
+        if not os.path.exists(dept_year_dir):
+            raise HTTPException(status_code=404, detail=f"Directory not found: {dept_year_dir}")
+        
+        deleted_students = []
+        
+        # Process each student directory
+        for student_id in os.listdir(dept_year_dir):
+            student_path = os.path.join(dept_year_dir, student_id)
+            
+            if not os.path.isdir(student_path):
+                continue
+            
+            json_path = os.path.join(student_path, f"{student_id}.json")
+            
+            if not os.path.exists(json_path):
+                continue
+            
+            try:
+                with open(json_path, 'r') as f:
+                    student_data = json.load(f)
+                
+                # Check if student failed quality check
+                if student_data.get('qualityCategory') == 'fail':
+                    # Delete the entire student directory
+                    shutil.rmtree(student_path)
+                    deleted_students.append(student_id)
+                    
+            except Exception as e:
+                print(f"Error processing student {student_id}: {e}")
+                continue
+        
+        return {
+            "success": True,
+            "message": f"Deleted {len(deleted_students)} students who failed quality check",
+            "deleted_students": deleted_students
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting failed data: {str(e)}")
+
+@app.post("/student-data/{dept}/{year}/process-borderline", 
+          summary="Process borderline quality students")
+async def process_borderline_students(dept: str, year: str):
+    """Process students who were marked as borderline quality"""
+    try:
+        dept_year_dir = os.path.join(STUDENT_DATA_DIR, f"{dept}_{year}")
+        
+        if not os.path.exists(dept_year_dir):
+            raise HTTPException(status_code=404, detail=f"Directory not found: {dept_year_dir}")
+        
+        processed_students = []
+        
+        # Process each student directory
+        for student_id in os.listdir(dept_year_dir):
+            student_path = os.path.join(dept_year_dir, student_id)
+            
+            if not os.path.isdir(student_path):
+                continue
+            
+            json_path = os.path.join(student_path, f"{student_id}.json")
+            
+            if not os.path.exists(json_path):
+                continue
+            
+            try:
+                with open(json_path, 'r') as f:
+                    student_data = json.load(f)
+                
+                # Check if student is borderline and update to pass
+                if student_data.get('qualityCategory') == 'borderline':
+                    student_data['qualityCheck'] = 'pass'
+                    student_data['qualityCategory'] = 'pass'
+                    
+                    # Save updated JSON
+                    with open(json_path, 'w') as f:
+                        json.dump(student_data, f, indent=2)
+                    
+                    processed_students.append(student_id)
+                    
+            except Exception as e:
+                print(f"Error processing student {student_id}: {e}")
+                continue
+        
+        return {
+            "success": True,
+            "message": f"Processed {len(processed_students)} borderline students",
+            "processed_students": processed_students
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing borderline students: {str(e)}")
+
+@app.delete("/student-data/{dept}/{year}/delete-borderline", 
+           summary="Delete borderline quality students")
+async def delete_borderline_students(dept: str, year: str):
+    """Delete students who were marked as borderline quality"""
+    try:
+        dept_year_dir = os.path.join(STUDENT_DATA_DIR, f"{dept}_{year}")
+        
+        if not os.path.exists(dept_year_dir):
+            raise HTTPException(status_code=404, detail=f"Directory not found: {dept_year_dir}")
+        
+        deleted_students = []
+        
+        # Process each student directory
+        for student_id in os.listdir(dept_year_dir):
+            student_path = os.path.join(dept_year_dir, student_id)
+            
+            if not os.path.isdir(student_path):
+                continue
+            
+            json_path = os.path.join(student_path, f"{student_id}.json")
+            
+            if not os.path.exists(json_path):
+                continue
+            
+            try:
+                with open(json_path, 'r') as f:
+                    student_data = json.load(f)
+                
+                # Check if student is borderline quality
+                if student_data.get('qualityCategory') == 'borderline':
+                    # Delete the entire student directory
+                    shutil.rmtree(student_path)
+                    deleted_students.append(student_id)
+                    
+            except Exception as e:
+                print(f"Error processing student {student_id}: {e}")
+                continue
+        
+        return {
+            "success": True,
+            "message": f"Deleted {len(deleted_students)} borderline students",
+            "deleted_students": deleted_students
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting borderline students: {str(e)}")
+
 @app.post("/student-data/{dept}/{year}/process", 
           summary="Process students' videos to extract faces")
 async def process_students_videos(dept: str, year: str):
@@ -1433,18 +1621,21 @@ async def process_students_videos(dept: str, year: str):
         students = get_students_in_folder(dept, year)
         pending_students = [s for s in students if s.videoUploaded and not s.facesExtracted]
         
-        if not pending_students:
+        # Filter only quality-passed students
+        quality_passed_students = [s for s in pending_students if s.qualityCheck == "pass"]
+        
+        if not quality_passed_students:
             return {
                 "success": True,
-                "message": "No pending students to process",
+                "message": "No quality-passed students to process. Please run quality check first.",
                 "processed_count": 0
             }
         
-        # Process each student
+        # Process each quality-passed student
         results = []
         processed_count = 0
         
-        for student in pending_students:
+        for student in quality_passed_students:
             result = process_student_video(student)
             results.append({
                 "student": student.regNo,
@@ -1457,9 +1648,9 @@ async def process_students_videos(dept: str, year: str):
         
         return {
             "success": True,
-            "message": f"Processed {processed_count} out of {len(pending_students)} students",
+            "message": f"Processed {processed_count} out of {len(quality_passed_students)} quality-passed students",
             "processed_count": processed_count,
-            "total_pending": len(pending_students),
+            "total_pending": len(quality_passed_students),
             "details": results
         }
         

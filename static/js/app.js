@@ -2022,6 +2022,12 @@ if (btnProcessStudentVideos) {
     btnProcessStudentVideos.addEventListener('click', handleProcessStudentVideos);
 }
 
+// Add event listener for quality check button
+const btnQualityCheck = document.getElementById('btnQualityCheck');
+if (btnQualityCheck) {
+    btnQualityCheck.addEventListener('click', handleQualityCheck);
+}
+
 // Add event listener for view pending students button
 const btnViewPendingStudents = document.getElementById('btnViewPendingStudents');
 if (btnViewPendingStudents) {
@@ -2130,6 +2136,9 @@ async function handleLoadStudentData(event) {
         // Store current selection for processing
         window.currentStudentData = { dept: department, year: year };
         
+        // Show quality check section
+        document.getElementById('qualityCheckSection').style.display = 'block';
+        
     } catch (error) {
         console.error("Error loading student data:", error);
         showAlert('error', error.message);
@@ -2138,6 +2147,300 @@ async function handleLoadStudentData(event) {
             btnLoad.disabled = false;
             btnLoad.innerHTML = '<i class="fas fa-search me-2"></i>Load Student Data';
         }
+    }
+}
+
+// Handle quality check for student videos
+async function handleQualityCheck() {
+    if (!window.currentStudentData) {
+        showAlert('error', 'Please load student data first');
+        return;
+    }
+    
+    const { dept, year } = window.currentStudentData;
+    
+    const btnQualityCheck = document.getElementById('btnQualityCheck');
+    if (btnQualityCheck) {
+        btnQualityCheck.disabled = true;
+        btnQualityCheck.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Checking Quality...';
+    }
+    
+    // Show processing indicator
+    const qualityResult = document.getElementById('qualityResult');
+    qualityResult.innerHTML = `
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            Checking video quality for ${dept} ${year}... This may take a few minutes.
+        </div>
+    `;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/student-data/${dept}/${year}/quality-check`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to check quality');
+        }
+        
+        const result = await response.json();
+        console.log("Quality check result:", result);
+        
+        // Store quality results globally
+        window.qualityCheckResults = result;
+        
+        // Display results
+        displayQualityResults(result);
+        
+    } catch (error) {
+        console.error("Error checking quality:", error);
+        qualityResult.innerHTML = `
+            <div class="alert alert-danger">
+                <h5 class="mb-3">Quality Check Failed</h5>
+                <p>${error.message}</p>
+            </div>
+        `;
+    } finally {
+        if (btnQualityCheck) {
+            btnQualityCheck.disabled = false;
+            btnQualityCheck.innerHTML = '<i class="fas fa-check-circle me-2"></i>Check Quality';
+        }
+    }
+}
+
+// Display quality check results
+function displayQualityResults(result) {
+    const qualityResult = document.getElementById('qualityResult');
+    
+    let resultHTML = '<div class="alert alert-info">';
+    resultHTML += '<h5 class="mb-3">Quality Check Results</h5>';
+    resultHTML += `<div class="row mb-3">
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="h3 text-success">${result.passed_students.length}</div>
+                <div class="text-muted">Passed</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="h3 text-danger">${result.failed_students.length}</div>
+                <div class="text-muted">Failed</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <div class="h3 text-warning">${result.borderline_students.length}</div>
+                <div class="text-muted">Borderline</div>
+            </div>
+        </div>
+    </div>`;
+    
+    resultHTML += `<div class="row mb-3">
+        <div class="col-md-6">
+            <div class="text-center">
+                <div class="h4 text-primary">${result.pass_rate.toFixed(1)}%</div>
+                <div class="text-muted">Pass Rate</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="text-center">
+                <div class="h4 text-info">${result.total_checked}</div>
+                <div class="text-muted">Total Checked</div>
+            </div>
+        </div>
+    </div>`;
+    
+    // Show failed students if any
+    if (result.failed_students.length > 0) {
+        resultHTML += '<div class="mt-3">';
+        resultHTML += '<h6 class="text-danger">Failed Students (Auto-reject):</h6>';
+        resultHTML += '<div class="bg-light p-2 rounded mb-3">';
+        resultHTML += '<small class="text-muted">Students with critical issues like no face detected, multiple people, severely blurred video:</small><br>';
+        resultHTML += '<code>' + result.failed_students.join(', ') + '</code>';
+        resultHTML += '</div>';
+        
+        resultHTML += `<div class="mb-3">
+            <button id="btnDeleteFailedData" class="btn btn-danger">
+                <i class="fas fa-trash me-2"></i>Delete Failed Quality Data (${result.failed_students.length} students)
+            </button>
+        </div>`;
+    }
+    
+    // Show borderline students if any
+    if (result.borderline_students.length > 0) {
+        resultHTML += '<div class="mt-3">';
+        resultHTML += '<h6 class="text-warning">Borderline Students (Review Required):</h6>';
+        resultHTML += '<div class="table-responsive">';
+        resultHTML += '<table class="table table-sm table-striped">';
+        resultHTML += '<thead><tr><th>Reg No</th><th>Issues</th></tr></thead><tbody>';
+        
+        result.borderline_students.forEach(student => {
+            resultHTML += `<tr>
+                <td><code>${student.regNo}</code></td>
+                <td><small class="text-muted">${student.issues.join(', ')}</small></td>
+            </tr>`;
+        });
+        
+        resultHTML += '</tbody></table></div>';
+        
+        resultHTML += `<div class="mt-3">
+            <button id="btnProcessBorderline" class="btn btn-warning me-2">
+                <i class="fas fa-check me-2"></i>Process Borderline Students Anyway
+            </button>
+            <button id="btnDeleteBorderline" class="btn btn-outline-danger">
+                <i class="fas fa-trash me-2"></i>Delete Borderline Students
+            </button>
+        </div>`;
+    }
+    
+    resultHTML += '</div>';
+    
+    qualityResult.innerHTML = resultHTML;
+    
+    // Add event listeners
+    const btnDeleteFailedData = document.getElementById('btnDeleteFailedData');
+    if (btnDeleteFailedData) {
+        btnDeleteFailedData.addEventListener('click', handleDeleteFailedData);
+    }
+    
+    const btnProcessBorderline = document.getElementById('btnProcessBorderline');
+    if (btnProcessBorderline) {
+        btnProcessBorderline.addEventListener('click', handleProcessBorderline);
+    }
+    
+    const btnDeleteBorderline = document.getElementById('btnDeleteBorderline');
+    if (btnDeleteBorderline) {
+        btnDeleteBorderline.addEventListener('click', handleDeleteBorderline);
+    }
+    
+    // Update process button to show only quality-passed students
+    const btnProcess = document.getElementById('btnProcessStudentVideos');
+    if (btnProcess && result.passed_students.length > 0) {
+        btnProcess.disabled = false;
+        btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${result.passed_students.length} Quality-Passed Videos`;
+    } else if (btnProcess) {
+        btnProcess.disabled = true;
+        btnProcess.innerHTML = '<i class="fas fa-cog me-2"></i>No Quality-Passed Videos';
+    }
+}
+
+// Handle deletion of failed quality data
+async function handleDeleteFailedData() {
+    if (!window.currentStudentData || !window.qualityCheckResults) {
+        showAlert('error', 'No quality check results available');
+        return;
+    }
+    
+    const { dept, year } = window.currentStudentData;
+    const failedCount = window.qualityCheckResults.failed_students.length;
+    
+    if (!confirm(`Are you sure you want to delete data for ${failedCount} students who failed quality check? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/student-data/${dept}/${year}/failed-quality`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to delete failed data');
+        }
+        
+        const result = await response.json();
+        
+        showAlert('success', `Successfully deleted data for ${result.deleted_students.length} students`);
+        
+        // Refresh the student data
+        setTimeout(() => {
+            handleLoadStudentData(new Event('submit'));
+        }, 1000);
+        
+    } catch (error) {
+        console.error("Error deleting failed data:", error);
+        showAlert('error', error.message);
+    }
+}
+
+// Handle processing borderline students
+async function handleProcessBorderline() {
+    if (!window.currentStudentData || !window.qualityCheckResults) {
+        showAlert('error', 'No quality check results available');
+        return;
+    }
+    
+    const { dept, year } = window.currentStudentData;
+    const borderlineCount = window.qualityCheckResults.borderline_students.length;
+    
+    if (!confirm(`Are you sure you want to process ${borderlineCount} borderline students? Their videos have minor quality issues.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/student-data/${dept}/${year}/process-borderline`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to process borderline students');
+        }
+        
+        const result = await response.json();
+        
+        showAlert('success', `Successfully processed ${result.processed_students.length} borderline students`);
+        
+        // Refresh the student data
+        setTimeout(() => {
+            handleLoadStudentData(new Event('submit'));
+        }, 1000);
+        
+    } catch (error) {
+        console.error("Error processing borderline students:", error);
+        showAlert('error', error.message);
+    }
+}
+
+// Handle deletion of borderline students
+async function handleDeleteBorderline() {
+    if (!window.currentStudentData || !window.qualityCheckResults) {
+        showAlert('error', 'No quality check results available');
+        return;
+    }
+    
+    const { dept, year } = window.currentStudentData;
+    const borderlineCount = window.qualityCheckResults.borderline_students.length;
+    
+    if (!confirm(`Are you sure you want to delete data for ${borderlineCount} borderline students? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/student-data/${dept}/${year}/delete-borderline`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Failed to delete borderline students');
+        }
+        
+        const result = await response.json();
+        
+        showAlert('success', `Successfully deleted data for ${result.deleted_students.length} borderline students`);
+        
+        // Refresh the student data
+        setTimeout(() => {
+            handleLoadStudentData(new Event('submit'));
+        }, 1000);
+        
+    } catch (error) {
+        console.error("Error deleting borderline students:", error);
+        showAlert('error', error.message);
     }
 }
 
