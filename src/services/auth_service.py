@@ -86,3 +86,26 @@ def list_admin_users() -> Dict[str, Any]:
 
 # Initialize the users table when module is imported
 create_users_table()
+
+# Create default superadmin if no users exist
+def create_default_superadmin():
+    """Create a default superadmin user if no users exist"""
+    conn = get_db_conn()
+    c = conn.cursor()
+    c.execute('SELECT COUNT(*) FROM users')
+    user_count = c.fetchone()[0]
+    
+    if user_count == 0:
+        # Create default superadmin user
+        default_username = 'superadmin'
+        default_password = 'admin123'  # Change this in production!
+        
+        c.execute('INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+                  (default_username, hash_password(default_password), 'superadmin'))
+        conn.commit()
+        print(f"Created default superadmin user: {default_username} / {default_password}")
+    
+    conn.close()
+
+# Create default superadmin
+create_default_superadmin()
