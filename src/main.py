@@ -27,7 +27,6 @@ from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer
 import hashlib
 
-# Load environment variables at module level
 load_dotenv()
 
 # Get host, port, and workers from environment variables or use defaults
