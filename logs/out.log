@@ -2115,3 +2115,131 @@
 2025-07-03 12:36:48: INFO:     127.0.0.1:41962 - "GET /static/mithrajith.png HTTP/1.1" 304 Not Modified
 2025-07-03 12:36:48: INFO:     127.0.0.1:41976 - "GET /static/siddharth.png HTTP/1.1" 404 Not Found
 2025-07-03 12:36:48: INFO:     127.0.0.1:41962 - "GET /static/about.png HTTP/1.1" 200 OK
+2025-07-08 09:24:18: Starting server on 0.0.0.0:8000 with 1 workers
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET / HTTP/1.1" 200 OK
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /static/css/style.css?v=1.1 HTTP/1.1" 200 OK
+2025-07-08 09:24:18: INFO:     127.0.0.1:32968 - "GET /static/css/toast.css?v=1.1 HTTP/1.1" 304 Not Modified
+2025-07-08 09:24:18: INFO:     127.0.0.1:32974 - "GET /static/js/app.js?v=1.1 HTTP/1.1" 200 OK
+2025-07-08 09:24:18: INFO:     127.0.0.1:32974 - "GET /static/image.png HTTP/1.1" 200 OK
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /static/img/placeholder.png HTTP/1.1" 404 Not Found
+2025-07-08 09:24:18: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:18: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:18: INFO:     127.0.0.1:32974 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:18: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:18: DEBUG: Returning galleries: []
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:18: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:18: DEBUG: Returning galleries: []
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /database/stats HTTP/1.1" 200 OK
+2025-07-08 09:24:18: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:18: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:18: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:18: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:18: INFO:     127.0.0.1:32962 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:20: INFO:     127.0.0.1:32962 - "GET /api/collection-app-status HTTP/1.1" 200 OK
+2025-07-08 09:24:20: INFO:     127.0.0.1:32968 - "GET /student-data/folders HTTP/1.1" 200 OK
+2025-07-08 09:24:20: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:20: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:20: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:21: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:21: DEBUG: Returning galleries: []
+2025-07-08 09:24:21: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:21: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:21: DEBUG: Returning galleries: []
+2025-07-08 09:24:21: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:21: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:21: DEBUG: Returning galleries: []
+2025-07-08 09:24:21: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:21: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:21: DEBUG: Returning galleries: []
+2025-07-08 09:24:21: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:21: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:21: DEBUG: Returning galleries: []
+2025-07-08 09:24:21: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:22: INFO:     127.0.0.1:32962 - "GET /database/stats HTTP/1.1" 200 OK
+2025-07-08 09:24:22: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:22: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:22: INFO:     127.0.0.1:32962 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:22: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:22: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:22: INFO:     127.0.0.1:32962 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:22: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:22: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:22: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:23: INFO:     127.0.0.1:32962 - "GET /student-data/folders HTTP/1.1" 200 OK
+2025-07-08 09:24:24: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:24: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:24: INFO:     127.0.0.1:32962 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:27: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:27: DEBUG: Returning galleries: []
+2025-07-08 09:24:27: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:27: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:27: DEBUG: Returning galleries: []
+2025-07-08 09:24:27: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:29: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:29: DEBUG: Returning galleries: []
+2025-07-08 09:24:29: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:29: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:29: DEBUG: Returning galleries: []
+2025-07-08 09:24:29: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:29: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:29: DEBUG: Returning galleries: []
+2025-07-08 09:24:29: INFO:     127.0.0.1:32962 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:30: INFO:     127.0.0.1:32962 - "GET /student-data/folders HTTP/1.1" 200 OK
+2025-07-08 09:24:33: INFO:     127.0.0.1:32962 - "GET /student-data/DPT001/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:39: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:40: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:41: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:41: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:41: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:41: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/summary HTTP/1.1" 200 OK
+2025-07-08 09:24:42: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/pending HTTP/1.1" 200 OK
+2025-07-08 09:24:44: INFO:     127.0.0.1:41076 - "GET /student-data/DPT006/2027/pending HTTP/1.1" 200 OK
+2025-07-08 09:24:48: INFO:     127.0.0.1:41076 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:48: INFO:     127.0.0.1:41076 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:48: INFO:     127.0.0.1:41076 - "GET /check-directories HTTP/1.1" 200 OK
+2025-07-08 09:24:50: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:50: DEBUG: Returning galleries: []
+2025-07-08 09:24:50: INFO:     127.0.0.1:41076 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:50: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:50: DEBUG: Returning galleries: []
+2025-07-08 09:24:50: INFO:     127.0.0.1:41076 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:50: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:50: DEBUG: Returning galleries: []
+2025-07-08 09:24:50: INFO:     127.0.0.1:41076 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:50: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:50: DEBUG: Returning galleries: []
+2025-07-08 09:24:50: INFO:     127.0.0.1:41076 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:50: DEBUG: All files in /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/gallery/galleries: []
+2025-07-08 09:24:50: DEBUG: Returning galleries: []
+2025-07-08 09:24:50: INFO:     127.0.0.1:41076 - "GET /galleries HTTP/1.1" 200 OK
+2025-07-08 09:24:51: INFO:     127.0.0.1:41076 - "GET /database/stats HTTP/1.1" 200 OK
+2025-07-08 09:24:51: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:51: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:51: INFO:     127.0.0.1:41076 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:51: DEBUG: Years: ['2026', '2027', '2028', '2029', '2030']
+2025-07-08 09:24:51: DEBUG: Departments: [{'id': 'DPT006', 'name': 'AIML'}, {'id': 'DPT005', 'name': 'CIVIL'}, {'id': 'DPT001', 'name': 'CS'}, {'id': 'DPT003', 'name': 'ECE'}, {'id': 'DPT004', 'name': 'EEE'}, {'id': 'DPT002', 'name': 'IT'}, {'id': 'DPT007', 'name': 'MECH'}]
+2025-07-08 09:24:51: INFO:     127.0.0.1:41076 - "GET /batches HTTP/1.1" 200 OK
+2025-07-08 09:24:54: INFO:     127.0.0.1:41076 - "GET /api/collection-app-status HTTP/1.1" 200 OK
+2025-07-08 09:24:59: INFO:     127.0.0.1:41076 - "POST /api/start-collection-app HTTP/1.1" 200 OK
+2025-07-08 09:25:03: INFO:     127.0.0.1:41076 - "GET /api/collection-app-status HTTP/1.1" 200 OK
+2025-07-08 09:25:03: INFO:     127.0.0.1:41076 - "GET /api/collection-app-config HTTP/1.1" 200 OK
+2025-07-08 09:25:04: INFO:     127.0.0.1:41076 - "GET /api/collection-app-status HTTP/1.1" 200 OK
+2025-07-08 09:25:04: INFO:     127.0.0.1:41076 - "GET /api/collection-app-config HTTP/1.1" 200 OK
+2025-07-08 09:25:13: INFO:     127.0.0.1:54984 - "POST /api/stop-collection-app HTTP/1.1" 200 OK
+2025-07-08 09:25:14: INFO:     127.0.0.1:54984 - "GET /student-data/folders HTTP/1.1" 200 OK
+2025-07-08 09:25:16: INFO:     127.0.0.1:54984 - "GET /api/collection-app-status HTTP/1.1" 200 OK
+2025-07-08 09:25:21: Checking quality for directory: /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/data/student_data/DPT006_2027
+2025-07-08 09:25:21: Found 1 student directories: ['714023247078']
+2025-07-08 09:25:21: Checking student 714023247078:
+2025-07-08 09:25:21:   Video path: /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/data/student_data/DPT006_2027/714023247078/714023247078.mp4 (exists: True)
+2025-07-08 09:25:21:   JSON path: /mnt/data/project_backups/Test_projects/Face-Data-collection-and-Gallery-management-application/data/student_data/DPT006_2027/714023247078/714023247078.json (exists: True)
+2025-07-08 09:25:21:   Skipping - already processed
+2025-07-08 09:25:21: Quality check completed:
+2025-07-08 09:25:21:   Total processed: 0
+2025-07-08 09:25:21:   Passed: 0
+2025-07-08 09:25:21:   Borderline: 0
+2025-07-08 09:25:21:   Failed: 0
+2025-07-08 09:25:21: INFO:     127.0.0.1:54986 - "POST /student-data/DPT006/2027/quality-check HTTP/1.1" 200 OK
