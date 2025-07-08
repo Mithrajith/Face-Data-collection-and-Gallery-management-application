@@ -15,3 +15,5 @@ src/checkpoints/
 
 **/__pycache__/
 .env
+
+*.log

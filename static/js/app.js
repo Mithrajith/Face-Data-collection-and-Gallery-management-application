@@ -247,12 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Student data form not found");
     }
 
-    // Add event listener for process student videos button
-    const btnProcessStudentVideos = document.getElementById('btnProcessStudentVideos');
-    if (btnProcessStudentVideos) {
-        btnProcessStudentVideos.addEventListener('click', handleProcessStudentVideos);
-    }
-
     // Add event listener for quality check button
     const btnQualityCheck = document.getElementById('btnQualityCheck');
     if (btnQualityCheck) {
@@ -262,10 +256,70 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log("Quality check button not found");
     }
 
+    // Add event listener for process student videos button
+    const btnProcessStudentVideos = document.getElementById('btnProcessStudentVideos');
+    if (btnProcessStudentVideos) {
+        btnProcessStudentVideos.addEventListener('click', handleProcessStudentVideos);
+    }
+
     // Add event listener for view pending students button
     const btnViewPendingStudents = document.getElementById('btnViewPendingStudents');
     if (btnViewPendingStudents) {
         btnViewPendingStudents.addEventListener('click', handleViewPendingStudents);
+    }
+
+    // Show/hide Add Admin container based on userRole
+    const userRole = localStorage.getItem('userRole');
+    const addAdminContainer = document.getElementById('addAdminContainer');
+    const addBatchContainer = document.getElementById('addBatchContainer');
+    const addDepartmentContainer = document.getElementById('addDepartmentContainer');
+    const adminRow = document.getElementById('adminRow'); // The row containing all three containers
+
+    if (addAdminContainer && addBatchContainer && addDepartmentContainer && adminRow) {
+        if (userRole !== 'superadmin') {
+            // For admin: show only Add Batch and Add Department, stacked vertically with spacing
+            addAdminContainer.style.display = 'none';
+            addBatchContainer.className = 'card mb-3';
+            addDepartmentContainer.className = 'card mb-3';
+            // Remove horizontal row layout
+            adminRow.className = '';
+        } else {
+            // For superadmin: show all three in a horizontal row
+            addAdminContainer.style.display = 'block';
+            addBatchContainer.className = 'card col-md-4 mb-0';
+            addDepartmentContainer.className = 'card col-md-4 mb-0';
+            addAdminContainer.className = 'card col-md-4 mb-0';
+            adminRow.className = 'row g-2';
+        }
+    }
+
+    // Load admin list for superadmin
+    if (userRole === 'superadmin') {
+        setTimeout(() => loadAdminList(), 100);
+    }
+
+    // Add Admin form submission (only for superadmin)
+    const addAdminForm = document.getElementById('addAdminForm');
+    if (addAdminForm) {
+        addAdminForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const res = await fetch('/api/add-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role: 'admin' })
+            });
+            const data = await res.json();
+            if (data.success) {
+                showAlert('success', 'Admin added successfully');
+                document.getElementById('adminUsername').value = '';
+                document.getElementById('adminPassword').value = '';
+                loadAdminList();
+            } else {
+                showAlert('error', data.message || 'Failed to add admin');
+            }
+        });
     }
 
     // Initialize the application
@@ -2742,49 +2796,7 @@ async function handleViewPendingStudents() {
     }
 }
 
-// Add at the top: check login and redirect if not logged in
-(function() {
-    if (!localStorage.getItem('userRole')) {
-        window.location.href = '/static/login.html';
-    }
-})();
-
-// Show/hide Add Admin container based on userRole
-document.addEventListener('DOMContentLoaded', function() {
-    // Show/hide Add Admin container based on userRole
-    const userRole = localStorage.getItem('userRole');
-    const addAdminContainer = document.getElementById('addAdminContainer');
-    const addBatchContainer = document.getElementById('addBatchContainer');
-    const addDepartmentContainer = document.getElementById('addDepartmentContainer');
-    const adminRow = document.getElementById('adminRow'); // The row containing all three containers
-
-    if (addAdminContainer && addBatchContainer && addDepartmentContainer && adminRow) {
-        if (userRole !== 'superadmin') {
-            // For admin: show only Add Batch and Add Department, stacked vertically with spacing
-            addAdminContainer.style.display = 'none';
-            addBatchContainer.className = 'card mb-3';
-            addDepartmentContainer.className = 'card mb-3';
-            // Remove horizontal row layout
-            adminRow.className = '';
-        } else {
-            // For superadmin: show all three in a horizontal row
-            addAdminContainer.style.display = 'block';
-            addBatchContainer.className = 'card col-md-4 mb-0';
-            addDepartmentContainer.className = 'card col-md-4 mb-0';
-            addAdminContainer.className = 'card col-md-4 mb-0';
-            adminRow.className = 'row g-2';
-        }
-    }
-});
-
 // --- Admin List Display and Delete Logic (Superadmin Only) ---
-document.addEventListener('DOMContentLoaded', function() {
-    const userRole = localStorage.getItem('userRole');
-    if (userRole === 'superadmin') {
-        loadAdminList();
-    }
-});
-
 async function loadAdminList() {
     const adminListContainer = document.getElementById('adminListContainer');
     if (!adminListContainer) return;
@@ -2837,29 +2849,10 @@ async function loadAdminList() {
     }
 }
 
-// Add Admin form submission (only for superadmin)
-document.addEventListener('DOMContentLoaded', function() {
-    const addAdminForm = document.getElementById('addAdminForm');
-    if (addAdminForm) {
-        addAdminForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const username = document.getElementById('adminUsername').value;
-            const password = document.getElementById('adminPassword').value;
-            const res = await fetch('/api/add-admin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, role: 'admin' })
-            });
-            const data = await res.json();
-            if (data.success) {
-                showAlert('success', 'Admin added successfully');
-                document.getElementById('adminUsername').value = '';
-                document.getElementById('adminPassword').value = '';
-                loadAdminList();
-            } else {
-                showAlert('error', data.message || 'Failed to add admin');
-            }
-        });
+// Add at the top: check login and redirect if not logged in
+(function() {
+    if (!localStorage.getItem('userRole')) {
+        window.location.href = '/static/login.html';
     }
-});
+})();
 
