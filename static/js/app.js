@@ -279,10 +279,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (userRole !== 'superadmin') {
             // For admin: show only Add Batch and Add Department, stacked vertically with spacing
             addAdminContainer.style.display = 'none';
-            addBatchContainer.className = 'card mb-3';
-            addDepartmentContainer.className = 'card mb-3';
-            // Remove horizontal row layout
-            adminRow.className = '';
+            addBatchContainer.className = 'col-md-6';
+            addDepartmentContainer.className = 'col-md-6';
+            // // Remove horizontal row layout
+            // adminRow.className = '';
         } else {
             // For superadmin: show all three in a horizontal row
             addAdminContainer.style.display = 'block';
