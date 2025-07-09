@@ -78,6 +78,7 @@ EOL
 
 # Remove previous instance if running
 pm2 delete gallery-manager 2>/dev/null || true
+pm2 delete data-collection-app 2>/dev/null || true
 
 # Start application
 echo "🚀 Launching Gallery Manager..."
