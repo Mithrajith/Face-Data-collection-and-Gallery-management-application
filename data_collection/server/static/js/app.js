@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         sessionId: null,
         studentId: null,
+        name: null, // Add name to state
         year: null,
         dept: null,
         mediaRecorder: null,
@@ -105,6 +106,7 @@ async function handleFormSubmit(event) {
     event.preventDefault();
     
     state.studentId = document.getElementById('studentId').value;
+    state.name = document.getElementById('name').value; // Get the name from the form
     state.year = document.getElementById('year').value; // Get the year from the form
     state.dept = document.getElementById('dept').value;
 
@@ -131,6 +133,7 @@ async function handleFormSubmit(event) {
             },
             body: JSON.stringify({
                 studentId: state.studentId,
+                name: state.name, // Send name to backend
                 year: passOutYear,
                 dept: state.dept
             })
@@ -355,6 +358,7 @@ async function uploadVideo(blob) {
         // Reset state
         state.sessionId = null;
         state.studentId = null;
+        state.name = null; // Reset name
         state.year = null;
         state.dept = null;
         state.mediaRecorder = null;

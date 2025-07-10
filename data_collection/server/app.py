@@ -169,6 +169,7 @@ def start_session():
         return jsonify({"error": "No data provided"}), 400
         
     student_id = data.get('studentId')  # Registration Number
+    name = data.get('name')  # Full Name
     year = data.get('year')
     dept = data.get('dept')
     
@@ -190,6 +191,7 @@ def start_session():
     session_data = {
         "sessionId": session_id,
         "regNo": student_id,
+        "name": name,  # Save name in session JSON
         "year": year,
         "dept": dept,
         "batch": f"Batch{year}",  # Create batch from year
@@ -214,7 +216,7 @@ def upload_video(session_id):
     
     file = request.files['video']
     student_id = request.form.get('studentId')
-    # name = request.form.get('name')
+    name = request.form.get('name')  # Accept name from form
     year = request.form.get('year')
     dept = request.form.get('dept')
     
