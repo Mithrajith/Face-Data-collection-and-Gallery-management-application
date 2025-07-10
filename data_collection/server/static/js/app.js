@@ -78,22 +78,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const yearField = document.getElementById('year');
         const deptField = document.getElementById('dept');
 
-        regNoInput.addEventListener("input", () => {
+        regNoInput.addEventListener("input", async () => {
             const regNo = regNoInput.value.trim();
-
             if (/^\d{12}$/.test(regNo)) {
                 const pattern = /^(\d{4})(\d{2})(\d{3})(\d{3})$/;
                 const match = regNo.match(pattern);
-
                 if (match) {
-                    const [, firstPart, year, deptCode, rollNo] = match;
-
+                    const [, firstPart, year, deptId, rollNo] = match;
                     const fullYear = 2000 + parseInt(year);
                     const gradYear = fullYear + 4;
-
                     yearField.value = `${fullYear} - ${gradYear}`;
-
-                    deptField.value = deptCode;
+                    // Fetch department code from backend using deptId
+                    try {
+                        const response = await fetch(`/api/get-department-code`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ dept_id: deptId })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            deptField.value = data.dept_code;
+                        } else {
+                            deptField.value = deptId; // fallback to id if not found
+                        }
+                    } catch (e) {
+                        deptField.value = deptId;
+                    }
                 }
             } else {
                 yearField.value = "";

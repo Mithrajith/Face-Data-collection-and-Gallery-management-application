@@ -663,6 +663,26 @@ def get_student_name():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
+@app.route('/api/get-department-code', methods=['POST'])
+def get_department_code():
+    data = request.get_json()
+    dept_id = data.get('dept_id')
+    if not dept_id:
+        return jsonify({'success': False, 'message': 'Department ID required.'}), 400
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM departments WHERE department_id=?", (dept_id,))
+        result = cur.fetchone()
+        conn.close()
+        if result:
+            return jsonify({'success': True, 'dept_code': result[0]})
+        else:
+            return jsonify({'success': False, 'message': 'No department found.'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
 if __name__ == '__main__':
     import sys
     from gunicorn.app.wsgiapp import run
