@@ -494,6 +494,49 @@ async function uploadVideo(blob) {
     if (elements.retry) {
         elements.retry.addEventListener('click', handleRetry);
     }
+    
+    // Admin: Process Videos button handler
+    const processBtn = document.getElementById('process-videos-btn');
+    if (processBtn) {
+        processBtn.addEventListener('click', async () => {
+            const year = document.getElementById('process-year').value.trim();
+            const dept = document.getElementById('process-dept').value.trim();
+            const statusDiv = document.getElementById('process-status');
+            if (!year || !dept) {
+                statusDiv.textContent = 'Please enter both year and department.';
+                statusDiv.style.color = 'red';
+                return;
+            }
+            statusDiv.textContent = 'Processing videos...';
+            statusDiv.style.color = '#333';
+            try {
+                const response = await fetch('/api/process-videos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year, dept })
+                });
+                let resultText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(resultText);
+                } catch (e) {
+                    statusDiv.textContent = 'Server error: ' + resultText;
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+                if (result.success) {
+                    statusDiv.textContent = result.message || 'Processing complete!';
+                    statusDiv.style.color = 'green';
+                } else {
+                    statusDiv.textContent = (result.error || result.message || 'Processing failed.') + (result.details ? ('\nDetails: ' + JSON.stringify(result.details)) : '');
+                    statusDiv.style.color = 'red';
+                }
+            } catch (err) {
+                statusDiv.textContent = 'Network or server error: ' + err;
+                statusDiv.style.color = 'red';
+            }
+        });
+    }
 });
 
 // Expose functions to global scope

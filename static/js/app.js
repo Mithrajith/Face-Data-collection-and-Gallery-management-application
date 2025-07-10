@@ -1601,10 +1601,10 @@ function showAlert(type, message) {
         case 'warning':
             toastType = 'warning';
             break;
+        case 'info':
         default:
             toastType = 'info';
     }
-    
     // Call new function with equivalent parameters
     return showToast(toastType, message, {
         title: false, // Don't show header for backward compatibility
@@ -2129,7 +2129,7 @@ async function loadStudentDataFolders() {
             });
         }
         
-        // Populate department dropdown
+        //
         const deptSelect = document.getElementById('studentDepartment');
         if (deptSelect) {
             deptSelect.innerHTML = '<option value="" selected disabled>Select Department</option>';

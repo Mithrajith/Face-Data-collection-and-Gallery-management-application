@@ -12,6 +12,7 @@ from io import BytesIO
 import base64
 from db_utils import get_batch_years_and_departments
 from dotenv import load_dotenv
+from src.services.student_data_service import process_students_videos
 
 # Load environment variables at module level
 load_dotenv()
@@ -607,6 +608,16 @@ def generate_qr():
 def about():
     static_folder = app.static_folder or 'static'
     return send_from_directory(static_folder, 'about.html')
+
+@app.route('/api/process-videos', methods=['POST'])
+def api_process_videos():
+    data = request.json or {}
+    dept = data.get('dept')
+    year = data.get('year')
+    if not dept or not year:
+        return jsonify({"success": False, "error": "Department and year are required."}), 400
+    result = process_students_videos(dept, year)
+    return jsonify(result)
 
 if __name__ == '__main__':
     import sys
