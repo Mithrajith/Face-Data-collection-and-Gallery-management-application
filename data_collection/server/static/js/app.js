@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Student login enforcement
+    if (!localStorage.getItem('studentRegNo')) {
+        window.location.href = '/static/login.html';
+        return;
+    }
     // Check for secure context
     if (!navigator.mediaDevices) {
         // Create error message
@@ -520,19 +525,30 @@ async function uploadVideo(blob) {
                 try {
                     result = JSON.parse(resultText);
                 } catch (e) {
-                    statusDiv.textContent = 'Server error: ' + resultText;
+                    // Try to provide more helpful error info
+                    statusDiv.textContent = 'Server error: ' + (resultText || e.message);
                     statusDiv.style.color = 'red';
                     return;
                 }
-                if (result.success) {
-                    statusDiv.textContent = result.message || 'Processing complete!';
-                    statusDiv.style.color = 'green';
+                if (result && typeof result === 'object' && 'success' in result) {
+                    if (result.success) {
+                        statusDiv.textContent = result.message || 'Processing complete!';
+                        statusDiv.style.color = 'green';
+                    } else {
+                        statusDiv.textContent = (result.error || result.message || 'Processing failed.') + (result.details ? ('\nDetails: ' + JSON.stringify(result.details)) : '');
+                        statusDiv.style.color = 'red';
+                    }
                 } else {
-                    statusDiv.textContent = (result.error || result.message || 'Processing failed.') + (result.details ? ('\nDetails: ' + JSON.stringify(result.details)) : '');
+                    statusDiv.textContent = 'Unexpected server response.';
                     statusDiv.style.color = 'red';
                 }
             } catch (err) {
-                statusDiv.textContent = 'Network or server error: ' + err;
+                // Improved error handling for network/server errors
+                if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+                    statusDiv.textContent = 'Network error: Could not reach backend server. Please check if the server is running and reachable.';
+                } else {
+                    statusDiv.textContent = 'Network or server error: ' + (err.message || err);
+                }
                 statusDiv.style.color = 'red';
             }
         });
@@ -544,3 +560,29 @@ window.initCamera = initCamera;
 window.startRecording = startRecording;
 window.handleRestart = handleRestart;
 window.handleRetry = handleRetry;
+
+// Autofill name when registration number is entered
+const regNoInput = document.getElementById('studentId');
+const nameInput = document.getElementById('name');
+regNoInput.addEventListener('blur', async function() {
+    const regno = regNoInput.value.trim();
+    if (/^\d{12}$/.test(regno)) {
+        try {
+            const response = await fetch('/api/get-student-name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ regno })
+            });
+            const data = await response.json();
+            if (data.success) {
+                nameInput.value = data.name;
+            } else {
+                nameInput.value = '';
+            }
+        } catch (e) {
+            nameInput.value = '';
+        }
+    } else {
+        nameInput.value = '';
+    }
+});

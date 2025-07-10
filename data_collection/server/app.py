@@ -12,6 +12,9 @@ from io import BytesIO
 import base64
 from db_utils import get_batch_years_and_departments
 from dotenv import load_dotenv
+
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.services.student_data_service import process_students_videos
 
 # Load environment variables at module level
@@ -618,6 +621,47 @@ def api_process_videos():
         return jsonify({"success": False, "error": "Department and year are required."}), 400
     result = process_students_videos(dept, year)
     return jsonify(result)
+
+@app.route('/api/student-login', methods=['POST'])
+def student_login():
+    data = request.get_json()
+    regno = data.get('regno')
+    dob = data.get('dob')
+    if not regno or not dob:
+        return jsonify({'success': False, 'message': 'Register number and DOB required.'}), 400
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM students WHERE register_no=? AND dob=?", (regno, dob))
+        result = cur.fetchone()
+        conn
+        if result:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Invalid register number or date of birth.'}), 401
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/api/get-student-name', methods=['POST'])
+def get_student_name():
+    data = request.get_json()
+    regno = data.get('regno')
+    if not regno:
+        return jsonify({'success': False, 'message': 'Register number required.'}), 400
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM students WHERE register_no=?", (regno,))
+        result = cur.fetchone()
+        conn.close()
+        if result:
+            return jsonify({'success': True, 'name': result[0]})
+        else:
+            return jsonify({'success': False, 'message': 'No student found.'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     import sys

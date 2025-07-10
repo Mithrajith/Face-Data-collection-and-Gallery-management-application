@@ -46,7 +46,7 @@
         </div>
         <div class="form-group">
           <label for="name">Full Name:</label>
-          <input type="text" id="name" name="name" placeholder="Enter your full name" required />
+          <input type="text" id="name" name="name"  readonly />
         </div>
         <div class="form-group">
             <label for="year">Year:</label>
@@ -112,23 +112,6 @@
       </div>
     </div>
 
-    <!-- Admin Section -->
-    <div class="admin-section" style="margin-top: 2rem;">
-      <h3>Admin: Batch Process Videos</h3>
-      <div class="form-group">
-        <label for="process-year">Year:</label>
-        <input type="text" id="process-year" placeholder="e.g. 2025" />
-      </div>
-      <div class="form-group">
-        <label for="process-dept">Department:</label>
-        <input type="text" id="process-dept" placeholder="e.g. CSE" />
-      </div>
-      <button id="process-videos-btn" class="btn btn-danger">
-        <i class="bi bi-cpu"></i> Process Videos
-      </button>
-      <div id="process-status" style="margin-top: 1rem; color: #333;"></div>
-    </div>
-  </div>
 
   <!-- Modal: Instructions -->
   <div id="modal1" class="modal">
@@ -181,6 +164,14 @@
         modal.style.display = 'none';
       }
     });
+
+    document.getElementById('restart').addEventListener('click', function () {
+      // Clear any authentication/session info
+      localStorage.removeItem('student_authenticated');
+      localStorage.removeItem('student_regno');
+      // Redirect to login page
+      window.location.href = '/static/login.html';
+    });
   </script>
 
   <script src="/static/js/app.js"></script>
@@ -194,6 +185,31 @@
           modal1.style.display = 'block';
         });
       }
+      // Autofill name when registration number is entered
+      var regNoInput = document.getElementById('studentId');
+      var nameInput = document.getElementById('name');
+      regNoInput.addEventListener('input', async function() {
+        const regno = regNoInput.value.trim();
+        if (/^\d{12}$/.test(regno)) {
+          try {
+            const response = await fetch('/api/get-student-name', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ regno })
+            });
+            const data = await response.json();
+            if (data.success) {
+              nameInput.value = data.name;
+            } else {
+              nameInput.value = '';
+            }
+          } catch (e) {
+            nameInput.value = '';
+          }
+        } else {
+          nameInput.value = '';
+        }
+      });
     });
   </script>
   

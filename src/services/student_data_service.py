@@ -3,6 +3,8 @@ import json
 import shutil
 import gc
 from typing import List, Dict, Any
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from models.pydantic_models import StudentInfo, StudentDataSummary
 from services.face_processing import extract_frames, detect_and_crop_faces
