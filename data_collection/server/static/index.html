@@ -42,7 +42,7 @@
       <form id="student-form">
         <div class="form-group">
           <label for="studentId">Registration Number:</label>
-          <input type="text" id="studentId" name="studentId" placeholder="Enter registration number" required />
+          <input type="text" id="studentId" name="studentId"  readonly />
         </div>
         <div class="form-group">
           <label for="name">Full Name:</label>
@@ -213,6 +213,19 @@
     });
   </script>
   
+  <!-- Autofill registration number in the main form if available from login -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var regNoInput = document.getElementById('studentId');
+      var loginRegNo = localStorage.getItem('studentRegNo');
+      if (regNoInput && loginRegNo) {
+        regNoInput.value = loginRegNo;
+        // Optionally, trigger input event to autofill name/year/department
+        regNoInput.dispatchEvent(new Event('input'));
+      }
+    });
+  </script>
+
   <!-- Enhanced Fixed/Sticky Footer -->
   <footer class="footer fixed-footer bg-gradient py-1" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid rgba(0,0,0,0.05); z-index: 999;">
     <div class="container">
