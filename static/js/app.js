@@ -777,39 +777,58 @@ async function performRecognition() {
         const result = await response.json();
         console.log("Recognition result received:", result);
         
+        // Debug log to help identify the response structure
+        console.log("Response keys:", Object.keys(result));
+        console.log("Has result_image:", !!result.result_image);
+        console.log("Has detected_faces:", !!result.detected_faces);
+        if (result.detected_faces) {
+            console.log("Number of detected faces:", result.detected_faces.length);
+        }
+        
         // Display result image
         const resultImage = document.getElementById('resultImage');
-        if (resultImage) {
-            resultImage.src = `data:image/jpeg;base64,${result.image}`;
+        if (resultImage && result.result_image) {
+            // The API returns result_image, not image
+            resultImage.src = result.result_image;
             console.log("Updated result image");
         } else {
-            console.error("Result image element not found");
+            console.error("Result image element not found or image data is missing");
+            // Set a default image if result_image is missing
+            if (resultImage && !result.result_image) {
+                resultImage.src = '';
+            }
         }
         
         // Display detected faces
         let resultsHTML = '<h5>Recognition Results:</h5>';
         
-        if (result.faces.length === 0) {
-            resultsHTML += '<p>No faces detected</p>';
-        } else {
-            resultsHTML += '<ul class="list-group">';
-            result.faces.forEach(face => {
-                if (face.identity === 'Unknown') {
-                    resultsHTML += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>Unknown person</span>
-                        </li>
-                    `;
-                } else {
-                    resultsHTML += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>${face.identity}</span>
-                            <span class="badge bg-success">${(face.similarity * 100).toFixed(1)}% match</span>
-                        </li>
-                    `;
-                }
-            });
-            resultsHTML += '</ul>';
+        try {
+            // The API returns detected_faces, not faces
+            if (!result.detected_faces || result.detected_faces.total_faces == 0) {
+                resultsHTML += '<p>No faces detected</p>';
+            } else {
+                resultsHTML += '<ul class="list-group">';
+                result.detected_faces.forEach(face => {
+                    if (!face || face.identity === 'Unknown') {
+                        resultsHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Unknown person</span>
+                            </li>
+                        `;
+                    } else {
+                        resultsHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>${face.identity || 'Unknown'}</span>
+                                <span class="badge bg-success">${(face.similarity ? (face.similarity * 100).toFixed(1) : 0)}% match</span>
+                            </li>
+                        `;
+                    }
+                });
+                resultsHTML += '</ul>';
+            }
+        } catch (innerError) {
+            console.error('Error displaying face detection results:', innerError);
+            resultsHTML += '<p>Error displaying recognition results</p>';
         }
         
         recognitionResults.innerHTML = resultsHTML;
@@ -2704,9 +2723,28 @@ async function handleProcessStudentVideos() {
         resultHTML += '<h5 class="mb-3">Processing Completed</h5>';
         resultHTML += `<p>${result.message}</p>`;
         resultHTML += `<ul class="list-unstyled">
-            <li><strong>Processed:</strong> ${result.processed_count}</li>
-            <li><strong>Total Pending:</strong> ${result.total_pending}</li>
+            <li><strong>Processed:</strong> ${result.processed_count || result.processedCount || 0}</li>
+            <li><strong>Total Pending:</strong> ${result.total_pending || result.totalPending || 0}</li>
         </ul>`;
+        
+        // Display student details if available
+        if (result.students && result.students.length > 0) {
+            resultHTML += '<h6 class="mt-3">Processed Students:</h6>';
+            resultHTML += '<div class="table-responsive mt-2"><table class="table table-sm table-bordered">';
+            resultHTML += '<thead><tr><th>Reg No</th><th>Name</th><th>Faces Extracted</th></tr></thead>';
+            resultHTML += '<tbody>';
+            
+            result.students.forEach(student => {
+                resultHTML += `<tr>
+                    <td>${student.regNo}</td>
+                    <td>${student.name || 'Unknown'}</td>
+                    <td>${student.facesCount || '0'}</td>
+                </tr>`;
+            });
+            
+            resultHTML += '</tbody></table></div>';
+        }
+        
         resultHTML += '</div>';
         
         processingResult.innerHTML = resultHTML;
@@ -2714,6 +2752,14 @@ async function handleProcessStudentVideos() {
         // Refresh the student data display
         setTimeout(() => {
             handleLoadStudentData(new Event('submit'));
+            // Also try to update the stats in the UI directly to avoid any display lag
+            if (result.processedCount || result.processed_count) {
+                document.getElementById('studentsProcessed').textContent = parseInt(document.getElementById('studentsProcessed').textContent || 0) + 
+                    (result.processedCount || result.processed_count);
+                document.getElementById('studentsPending').textContent = 
+                    Math.max(0, parseInt(document.getElementById('studentsPending').textContent || 0) - 
+                    (result.processedCount || result.processed_count));
+            }
         }, 1000);
         
     } catch (error) {

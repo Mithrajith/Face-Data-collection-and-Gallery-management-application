@@ -110,6 +110,37 @@ def get_department_by_name(name: str) -> Optional[Dict[str, str]]:
             return {"id": row['department_id'], "name": row['name']}
         return None
 
+def get_department_by_name_or_id(name_or_id: str) -> Optional[Dict[str, str]]:
+    """Get department by either its name or ID."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        print(f"Looking for department with name or ID: {name_or_id}")
+        
+        # Try to find by name first
+        cursor.execute("SELECT department_id, name FROM departments WHERE name = ?", (name_or_id,))
+        row = cursor.fetchone()
+        if row:
+            print(f"Found by name: ID={row['department_id']}, Name={row['name']}")
+            return {"department_id": row['department_id'], "name": row['name']}
+        
+        # Then try by ID
+        cursor.execute("SELECT department_id, name FROM departments WHERE department_id = ?", (name_or_id,))
+        row = cursor.fetchone()
+        if row:
+            print(f"Found by ID: ID={row['department_id']}, Name={row['name']}")
+            return {"department_id": row['department_id'], "name": row['name']}
+        
+        # Special case: check if the name_or_id is a numeric string that might be stored incorrectly
+        if name_or_id.isdigit():
+            cursor.execute("SELECT department_id, name FROM departments WHERE department_id LIKE ?", (f"%{name_or_id}%",))
+            row = cursor.fetchone()
+            if row:
+                print(f"Found by partial ID match: ID={row['department_id']}, Name={row['name']}")
+                return {"department_id": row['department_id'], "name": row['name']}
+        
+        print(f"Department not found: {name_or_id}")
+        return None
+
 def add_batch_year(year):
     """Add a new batch year to the database."""
     with get_db_connection() as conn:

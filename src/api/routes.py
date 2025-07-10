@@ -222,18 +222,32 @@ def create_app() -> FastAPI:
     ):
         """Create a gallery for face recognition from extracted face data"""
         
+        # Convert department name to ID if a name was provided
+        dept_info = database.get_department_by_name_or_id(department)
+        if dept_info:
+            department_id = dept_info["department_id"]
+            department_name = dept_info["name"]
+            print(f"Found department: ID={department_id}, Name={department_name}")
+        else:
+            # Try directly as department ID
+            if department not in database.get_department_ids():
+                raise HTTPException(status_code=400, detail=f"Invalid department: {department}")
+            department_id = department
+            department_name = database.get_department_by_id(department_id)["name"]
+        
         # Validate inputs
         if year not in database.get_batch_years():
             raise HTTPException(status_code=400, detail=f"Invalid batch year: {year}")
-        if department not in database.get_department_ids():
-            raise HTTPException(status_code=400, detail=f"Invalid department: {department}")
         
         # Get paths
-        data_path = get_data_path(year, department)
-        gallery_path = get_gallery_path(year, department)
+        data_path = get_data_path(year, department_id)
+        gallery_path = get_gallery_path(year, department_id)
+        
+        print(f"Looking for data in: {data_path}")
+        print(f"Gallery will be created at: {gallery_path}")
         
         if not os.path.exists(data_path):
-            raise HTTPException(status_code=400, detail=f"No face data found for {department} {year}. Please process videos first.")
+            raise HTTPException(status_code=400, detail=f"No face data found for {department_name} {year}. Please process videos first. Expected path: {data_path}")
         
         try:
             # Create gallery
@@ -241,13 +255,14 @@ def create_app() -> FastAPI:
             
             # Register in database
             identity_count = len(gallery) if gallery else 0
-            database.register_gallery(year, department, gallery_path, identity_count)
+            database.register_gallery(year, department_id, gallery_path, identity_count)
             
             return {
                 "success": True,
-                "message": f"Gallery created successfully for {department} {year}",
+                "message": f"Gallery created successfully for {department_name} {year}",
                 "gallery_path": gallery_path,
-                "identities": identity_count
+                "identities": identity_count,
+                "identities_count": identity_count  # For frontend compatibility
             }
             
         except Exception as e:
@@ -466,13 +481,24 @@ def create_app() -> FastAPI:
                 raise HTTPException(status_code=400, detail="No valid galleries found")
             
             # Recognize faces
-            result_img, detected_faces = recognize_faces(
-                img, gallery_paths, DEFAULT_MODEL_PATH, DEFAULT_YOLO_PATH, threshold
-            )
-            
-            # Convert result image to base64
-            _, buffer = cv2.imencode('.jpg', result_img)
-            result_base64 = base64.b64encode(buffer).decode('utf-8')
+            try:
+                result_img, detected_faces = recognize_faces(
+                    img, gallery_paths, DEFAULT_MODEL_PATH, DEFAULT_YOLO_PATH, threshold
+                )
+                
+                # Ensure detected_faces is a list
+                if detected_faces is None:
+                    detected_faces = []
+                    
+                # Convert result image to base64
+                _, buffer = cv2.imencode('.jpg', result_img)
+                result_base64 = base64.b64encode(buffer).decode('utf-8')
+            except Exception as face_error:
+                print(f"Error in face recognition: {face_error}")
+                # Return the original image if face recognition fails
+                _, buffer = cv2.imencode('.jpg', img)
+                result_base64 = base64.b64encode(buffer).decode('utf-8')
+                detected_faces = []
             
             return {
                 "success": True,
