@@ -13,6 +13,10 @@ import base64
 from db_utils import get_batch_years_and_departments
 from dotenv import load_dotenv
 
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from src.services.student_data_service import process_students_videos
+
 # Load environment variables at module level
 load_dotenv()
 
@@ -169,6 +173,7 @@ def start_session():
         return jsonify({"error": "No data provided"}), 400
         
     student_id = data.get('studentId')  # Registration Number
+    name = data.get('name')  # Full Name
     year = data.get('year')
     dept = data.get('dept')
     
@@ -190,6 +195,7 @@ def start_session():
     session_data = {
         "sessionId": session_id,
         "regNo": student_id,
+        "name": name,  # Save name in session JSON
         "year": year,
         "dept": dept,
         "batch": f"Batch{year}",  # Create batch from year
@@ -214,7 +220,7 @@ def upload_video(session_id):
     
     file = request.files['video']
     student_id = request.form.get('studentId')
-    # name = request.form.get('name')
+    name = request.form.get('name')  # Accept name from form
     year = request.form.get('year')
     dept = request.form.get('dept')
     
@@ -605,6 +611,77 @@ def generate_qr():
 def about():
     static_folder = app.static_folder or 'static'
     return send_from_directory(static_folder, 'about.html')
+
+@app.route('/api/process-videos', methods=['POST'])
+def api_process_videos():
+    data = request.json or {}
+    dept = data.get('dept')
+    year = data.get('year')
+    if not dept or not year:
+        return jsonify({"success": False, "error": "Department and year are required."}), 400
+    result = process_students_videos(dept, year)
+    return jsonify(result)
+
+@app.route('/api/student-login', methods=['POST'])
+def student_login():
+    data = request.get_json()
+    regno = data.get('regno')
+    dob = data.get('dob')
+    if not regno or not dob:
+        return jsonify({'success': False, 'message': 'Register number and DOB required.'}), 400
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM students WHERE register_no=? AND dob=?", (regno, dob))
+        result = cur.fetchone()
+        conn
+        if result:
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'message': 'Invalid register number or date of birth.'}), 401
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/api/get-student-name', methods=['POST'])
+def get_student_name():
+    data = request.get_json()
+    regno = data.get('regno')
+    if not regno:
+        return jsonify({'success': False, 'message': 'Register number required.'}), 400
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM students WHERE register_no=?", (regno,))
+        result = cur.fetchone()
+        conn.close()
+        if result:
+            return jsonify({'success': True, 'name': result[0]})
+        else:
+            return jsonify({'success': False, 'message': 'No student found.'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/api/get-department-code', methods=['POST'])
+def get_department_code():
+    data = request.get_json()
+    dept_id = data.get('dept_id')
+    if not dept_id:
+        return jsonify({'success': False, 'message': 'Department ID required.'}), 400
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM departments WHERE department_id=?", (dept_id,))
+        result = cur.fetchone()
+        conn.close()
+        if result:
+            return jsonify({'success': True, 'dept_code': result[0]})
+        else:
+            return jsonify({'success': False, 'message': 'No department found.'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 if __name__ == '__main__':
     import sys

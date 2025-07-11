@@ -42,12 +42,12 @@
       <form id="student-form">
         <div class="form-group">
           <label for="studentId">Registration Number:</label>
-          <input type="text" id="studentId" name="studentId" placeholder="Enter registration number" required />
+          <input type="text" id="studentId" name="studentId"  readonly />
         </div>
-        <!--<div class="form-group">
+        <div class="form-group">
           <label for="name">Full Name:</label>
-          <input type="text" id="name" name="name" placeholder="Enter your full name" required />
-        </div>-->
+          <input type="text" id="name" name="name"  readonly />
+        </div>
         <div class="form-group">
             <label for="year">Year:</label>
             <input type="text" id="year" name="year" readonly />
@@ -111,7 +111,7 @@
         </div>
       </div>
     </div>
-  </div>
+
 
   <!-- Modal: Instructions -->
   <div id="modal1" class="modal">
@@ -164,6 +164,14 @@
         modal.style.display = 'none';
       }
     });
+
+    document.getElementById('restart').addEventListener('click', function () {
+      // Clear any authentication/session info
+      localStorage.removeItem('student_authenticated');
+      localStorage.removeItem('student_regno');
+      // Redirect to login page
+      window.location.href = '/static/login.html';
+    });
   </script>
 
   <script src="/static/js/app.js"></script>
@@ -177,9 +185,47 @@
           modal1.style.display = 'block';
         });
       }
+      // Autofill name when registration number is entered
+      var regNoInput = document.getElementById('studentId');
+      var nameInput = document.getElementById('name');
+      regNoInput.addEventListener('input', async function() {
+        const regno = regNoInput.value.trim();
+        if (/^\d{12}$/.test(regno)) {
+          try {
+            const response = await fetch('/api/get-student-name', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ regno })
+            });
+            const data = await response.json();
+            if (data.success) {
+              nameInput.value = data.name;
+            } else {
+              nameInput.value = '';
+            }
+          } catch (e) {
+            nameInput.value = '';
+          }
+        } else {
+          nameInput.value = '';
+        }
+      });
     });
   </script>
   
+  <!-- Autofill registration number in the main form if available from login -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var regNoInput = document.getElementById('studentId');
+      var loginRegNo = localStorage.getItem('studentRegNo');
+      if (regNoInput && loginRegNo) {
+        regNoInput.value = loginRegNo;
+        // Optionally, trigger input event to autofill name/year/department
+        regNoInput.dispatchEvent(new Event('input'));
+      }
+    });
+  </script>
+
   <!-- Enhanced Fixed/Sticky Footer -->
   <footer class="footer fixed-footer bg-gradient py-1" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid rgba(0,0,0,0.05); z-index: 999;">
     <div class="container">

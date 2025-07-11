@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Student login enforcement
+    if (!localStorage.getItem('studentRegNo')) {
+        window.location.href = '/static/login.html';
+        return;
+    }
     // Check for secure context
     if (!navigator.mediaDevices) {
         // Create error message
@@ -42,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         sessionId: null,
         studentId: null,
+        name: null, // Add name to state
         year: null,
         dept: null,
         mediaRecorder: null,
@@ -72,22 +78,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const yearField = document.getElementById('year');
         const deptField = document.getElementById('dept');
 
-        regNoInput.addEventListener("input", () => {
+        regNoInput.addEventListener("input", async () => {
             const regNo = regNoInput.value.trim();
-
             if (/^\d{12}$/.test(regNo)) {
                 const pattern = /^(\d{4})(\d{2})(\d{3})(\d{3})$/;
                 const match = regNo.match(pattern);
-
                 if (match) {
-                    const [, firstPart, year, deptCode, rollNo] = match;
-
+                    const [, firstPart, year, deptId, rollNo] = match;
                     const fullYear = 2000 + parseInt(year);
                     const gradYear = fullYear + 4;
-
                     yearField.value = `${fullYear} - ${gradYear}`;
-
-                    deptField.value = deptCode;
+                    // Fetch department code from backend using deptId
+                    try {
+                        const response = await fetch(`/api/get-department-code`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ dept_id: deptId })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            deptField.value = data.dept_code;
+                        } else {
+                            deptField.value = deptId; // fallback to id if not found
+                        }
+                    } catch (e) {
+                        deptField.value = deptId;
+                    }
                 }
             } else {
                 yearField.value = "";
@@ -105,6 +121,7 @@ async function handleFormSubmit(event) {
     event.preventDefault();
     
     state.studentId = document.getElementById('studentId').value;
+    state.name = document.getElementById('name').value; // Get the name from the form
     state.year = document.getElementById('year').value; // Get the year from the form
     state.dept = document.getElementById('dept').value;
 
@@ -131,6 +148,7 @@ async function handleFormSubmit(event) {
             },
             body: JSON.stringify({
                 studentId: state.studentId,
+                name: state.name, // Send name to backend
                 year: passOutYear,
                 dept: state.dept
             })
@@ -355,6 +373,7 @@ async function uploadVideo(blob) {
         // Reset state
         state.sessionId = null;
         state.studentId = null;
+        state.name = null; // Reset name
         state.year = null;
         state.dept = null;
         state.mediaRecorder = null;
@@ -490,6 +509,60 @@ async function uploadVideo(blob) {
     if (elements.retry) {
         elements.retry.addEventListener('click', handleRetry);
     }
+    
+    // Admin: Process Videos button handler
+    const processBtn = document.getElementById('process-videos-btn');
+    if (processBtn) {
+        processBtn.addEventListener('click', async () => {
+            const year = document.getElementById('process-year').value.trim();
+            const dept = document.getElementById('process-dept').value.trim();
+            const statusDiv = document.getElementById('process-status');
+            if (!year || !dept) {
+                statusDiv.textContent = 'Please enter both year and department.';
+                statusDiv.style.color = 'red';
+                return;
+            }
+            statusDiv.textContent = 'Processing videos...';
+            statusDiv.style.color = '#333';
+            try {
+                const response = await fetch('/api/process-videos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year, dept })
+                });
+                let resultText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(resultText);
+                } catch (e) {
+                    // Try to provide more helpful error info
+                    statusDiv.textContent = 'Server error: ' + (resultText || e.message);
+                    statusDiv.style.color = 'red';
+                    return;
+                }
+                if (result && typeof result === 'object' && 'success' in result) {
+                    if (result.success) {
+                        statusDiv.textContent = result.message || 'Processing complete!';
+                        statusDiv.style.color = 'green';
+                    } else {
+                        statusDiv.textContent = (result.error || result.message || 'Processing failed.') + (result.details ? ('\nDetails: ' + JSON.stringify(result.details)) : '');
+                        statusDiv.style.color = 'red';
+                    }
+                } else {
+                    statusDiv.textContent = 'Unexpected server response.';
+                    statusDiv.style.color = 'red';
+                }
+            } catch (err) {
+                // Improved error handling for network/server errors
+                if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+                    statusDiv.textContent = 'Network error: Could not reach backend server. Please check if the server is running and reachable.';
+                } else {
+                    statusDiv.textContent = 'Network or server error: ' + (err.message || err);
+                }
+                statusDiv.style.color = 'red';
+            }
+        });
+    }
 });
 
 // Expose functions to global scope
@@ -497,3 +570,29 @@ window.initCamera = initCamera;
 window.startRecording = startRecording;
 window.handleRestart = handleRestart;
 window.handleRetry = handleRetry;
+
+// Autofill name when registration number is entered
+const regNoInput = document.getElementById('studentId');
+const nameInput = document.getElementById('name');
+regNoInput.addEventListener('blur', async function() {
+    const regno = regNoInput.value.trim();
+    if (/^\d{12}$/.test(regno)) {
+        try {
+            const response = await fetch('/api/get-student-name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ regno })
+            });
+            const data = await response.json();
+            if (data.success) {
+                nameInput.value = data.name;
+            } else {
+                nameInput.value = '';
+            }
+        } catch (e) {
+            nameInput.value = '';
+        }
+    } else {
+        nameInput.value = '';
+    }
+});
