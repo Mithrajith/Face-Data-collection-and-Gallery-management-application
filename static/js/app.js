@@ -2,7 +2,7 @@
 (function() {
     // If not logged in, redirect to login page
     if (!localStorage.getItem('userRole')) {
-        window.location.href = '/static/login.html';
+        window.location.href = '/login';
     }
 })();
 
@@ -2898,7 +2898,7 @@ async function loadAdminList() {
 // Add at the top: check login and redirect if not logged in
 (function() {
     if (!localStorage.getItem('userRole')) {
-        window.location.href = '/static/login.html';
+        window.location.href = '/login';
     }
 })();
 
