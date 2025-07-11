@@ -367,6 +367,10 @@ async function uploadVideo(blob) {
         instruction.textContent = "Error: Connection issue.";
         alert('Failed to upload video. Please check your connection and try again.');
         handleRestart();  // 👈 redirect to form page
+    } finally {
+        // Clear localStorage data
+        localStorage.removeItem('studentRegNo');
+        // Remove any other stored data if necessary
     }
 }
 
