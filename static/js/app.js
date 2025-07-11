@@ -1,8 +1,49 @@
-// At the very top of app.js, before any other logic:
+// --- SESSION TIMEOUT & BACK NAVIGATION PROTECTION ---
+(function() {
+    const SESSION_KEY = 'gallerySessionStart';
+    const ROLE_KEY = 'userRole';
+    const TIMEOUT_MINUTES = 30;
+    const TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
+
+    // Helper: clear session
+    function clearSession() {
+        localStorage.removeItem(ROLE_KEY);
+        localStorage.removeItem(SESSION_KEY);
+    }
+
+    // Helper: check session validity
+    function isSessionValid() {
+        const start = localStorage.getItem(SESSION_KEY);
+        if (!start) return false;
+        const now = Date.now();
+        return (now - parseInt(start, 10)) < TIMEOUT_MS;
+    }
+
+    // On every page load, check session
+    if (!localStorage.getItem(ROLE_KEY) || !isSessionValid()) {
+        clearSession();
+        window.location.replace('/static/login.html');
+    }
+
+    // Prevent back navigation after logout/session expiry
+    window.addEventListener('pageshow', function(event) {
+        if (!localStorage.getItem(ROLE_KEY) || !isSessionValid()) {
+            clearSession();
+            window.location.replace('/static/login.html');
+        }
+    });
+
+    // Expose logout function globally
+    window.galleryLogout = function() {
+        clearSession();
+        window.location.replace('/static/login.html');
+    };
+})();
+// --- END SESSION TIMEOUT ---// 
 (function() {
     // If not logged in, redirect to login page
     if (!localStorage.getItem('userRole')) {
-        window.location.href = '/static/login.html';
+        window.location.href = '/login';
     }
 })();
 
@@ -777,39 +818,58 @@ async function performRecognition() {
         const result = await response.json();
         console.log("Recognition result received:", result);
         
+        // Debug log to help identify the response structure
+        console.log("Response keys:", Object.keys(result));
+        console.log("Has result_image:", !!result.result_image);
+        console.log("Has detected_faces:", !!result.detected_faces);
+        if (result.detected_faces) {
+            console.log("Number of detected faces:", result.detected_faces.length);
+        }
+        
         // Display result image
         const resultImage = document.getElementById('resultImage');
-        if (resultImage) {
-            resultImage.src = `data:image/jpeg;base64,${result.image}`;
+        if (resultImage && result.result_image) {
+            // The API returns result_image, not image
+            resultImage.src = result.result_image;
             console.log("Updated result image");
         } else {
-            console.error("Result image element not found");
+            console.error("Result image element not found or image data is missing");
+            // Set a default image if result_image is missing
+            if (resultImage && !result.result_image) {
+                resultImage.src = '';
+            }
         }
         
         // Display detected faces
         let resultsHTML = '<h5>Recognition Results:</h5>';
         
-        if (result.faces.length === 0) {
-            resultsHTML += '<p>No faces detected</p>';
-        } else {
-            resultsHTML += '<ul class="list-group">';
-            result.faces.forEach(face => {
-                if (face.identity === 'Unknown') {
-                    resultsHTML += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>Unknown person</span>
-                        </li>
-                    `;
-                } else {
-                    resultsHTML += `
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>${face.identity}</span>
-                            <span class="badge bg-success">${(face.similarity * 100).toFixed(1)}% match</span>
-                        </li>
-                    `;
-                }
-            });
-            resultsHTML += '</ul>';
+        try {
+            // The API returns detected_faces, not faces
+            if (!result.detected_faces || result.detected_faces.total_faces == 0) {
+                resultsHTML += '<p>No faces detected</p>';
+            } else {
+                resultsHTML += '<ul class="list-group">';
+                result.detected_faces.forEach(face => {
+                    if (!face || face.identity === 'Unknown') {
+                        resultsHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Unknown person</span>
+                            </li>
+                        `;
+                    } else {
+                        resultsHTML += `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>${face.identity || 'Unknown'}</span>
+                                <span class="badge bg-success">${(face.similarity ? (face.similarity * 100).toFixed(1) : 0)}% match</span>
+                            </li>
+                        `;
+                    }
+                });
+                resultsHTML += '</ul>';
+            }
+        } catch (innerError) {
+            console.error('Error displaying face detection results:', innerError);
+            resultsHTML += '<p>Error displaying recognition results</p>';
         }
         
         recognitionResults.innerHTML = resultsHTML;
@@ -1601,10 +1661,10 @@ function showAlert(type, message) {
         case 'warning':
             toastType = 'warning';
             break;
+        case 'info':
         default:
             toastType = 'info';
     }
-    
     // Call new function with equivalent parameters
     return showToast(toastType, message, {
         title: false, // Don't show header for backward compatibility
@@ -2129,7 +2189,7 @@ async function loadStudentDataFolders() {
             });
         }
         
-        // Populate department dropdown
+        //
         const deptSelect = document.getElementById('studentDepartment');
         if (deptSelect) {
             deptSelect.innerHTML = '<option value="" selected disabled>Select Department</option>';
@@ -2150,70 +2210,63 @@ async function loadStudentDataFolders() {
 async function handleLoadStudentData(event) {
     event.preventDefault();
     console.log("Load student data form submitted");
-    
+
     const year = document.getElementById('studentBatchYear').value;
     const department = document.getElementById('studentDepartment').value;
-    
+
     if (!year || !department) {
         showAlert('error', 'Please select both batch year and department');
         return;
     }
-    
-    // Show loading indicator
+
     const btnLoad = document.getElementById('btnLoadStudentData');
     if (btnLoad) {
         btnLoad.disabled = true;
         btnLoad.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Loading...';
     }
-    
+
     try {
-        // Load student data summary
         const response = await fetch(`${API_BASE_URL}/student-data/${department}/${year}/summary`);
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || 'Failed to load student data');
         }
-        
+
         const summary = await response.json();
         console.log("Student data summary:", summary);
-        
-        // Update statistics display
+
         document.getElementById('totalStudents').textContent = summary.total_students;
         document.getElementById('studentsWithVideo').textContent = summary.students_with_video;
         document.getElementById('studentsPending').textContent = summary.students_pending;
         document.getElementById('studentsProcessed').textContent = summary.students_processed;
-        
-        // Show statistics section
+
         document.getElementById('studentDataStats').style.display = 'block';
-        
-        // Enable/disable process button based on pending count
+
         const btnProcess = document.getElementById('btnProcessStudentVideos');
         if (btnProcess) {
             btnProcess.disabled = summary.students_pending === 0;
-            if (summary.students_pending > 0) {
-                btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${summary.students_pending} Pending Videos`;
-            } else {
-                btnProcess.innerHTML = '<i class="fas fa-cog me-2"></i>No Videos to Process';
-            }
+            btnProcess.innerHTML = summary.students_pending > 0
+                ? `<i class="fas fa-cog me-2"></i>Process ${summary.students_pending} Pending Videos`
+                : '<i class="fas fa-cog me-2"></i>No Videos to Process';
         }
-        
-        // Store current selection for processing
-        window.currentStudentData = { dept: department, year: year };
-        
-        // Quality check button is always visible after loading data
+
         const btnQualityCheck = document.getElementById('btnQualityCheck');
         if (btnQualityCheck) {
             btnQualityCheck.disabled = false;
             btnQualityCheck.innerHTML = '<i class="fas fa-shield-alt me-2"></i>Check Quality First';
         }
-        
+
+        // Store selected data
+        window.currentStudentData = { dept: department, year: year };
+
     } catch (error) {
         console.error("Error loading student data:", error);
         showAlert('error', error.message);
     } finally {
+        // ✅ Re-enable Load button
         if (btnLoad) {
-            btnLoad
+            btnLoad.disabled = false;
             btnLoad.innerHTML = '<i class="fas fa-search me-2"></i>Load Student Data';
         }
     }
@@ -2704,9 +2757,28 @@ async function handleProcessStudentVideos() {
         resultHTML += '<h5 class="mb-3">Processing Completed</h5>';
         resultHTML += `<p>${result.message}</p>`;
         resultHTML += `<ul class="list-unstyled">
-            <li><strong>Processed:</strong> ${result.processed_count}</li>
-            <li><strong>Total Pending:</strong> ${result.total_pending}</li>
+            <li><strong>Processed:</strong> ${result.processed_count || result.processedCount || 0}</li>
+            <li><strong>Total Pending:</strong> ${result.total_pending || result.totalPending || 0}</li>
         </ul>`;
+        
+        // Display student details if available
+        if (result.students && result.students.length > 0) {
+            resultHTML += '<h6 class="mt-3">Processed Students:</h6>';
+            resultHTML += '<div class="table-responsive mt-2"><table class="table table-sm table-bordered">';
+            resultHTML += '<thead><tr><th>Reg No</th><th>Name</th><th>Faces Extracted</th></tr></thead>';
+            resultHTML += '<tbody>';
+            
+            result.students.forEach(student => {
+                resultHTML += `<tr>
+                    <td>${student.regNo}</td>
+                    <td>${student.name || 'Unknown'}</td>
+                    <td>${student.facesCount || '0'}</td>
+                </tr>`;
+            });
+            
+            resultHTML += '</tbody></table></div>';
+        }
+        
         resultHTML += '</div>';
         
         processingResult.innerHTML = resultHTML;
@@ -2714,6 +2786,14 @@ async function handleProcessStudentVideos() {
         // Refresh the student data display
         setTimeout(() => {
             handleLoadStudentData(new Event('submit'));
+            // Also try to update the stats in the UI directly to avoid any display lag
+            if (result.processedCount || result.processed_count) {
+                document.getElementById('studentsProcessed').textContent = parseInt(document.getElementById('studentsProcessed').textContent || 0) + 
+                    (result.processedCount || result.processed_count);
+                document.getElementById('studentsPending').textContent = 
+                    Math.max(0, parseInt(document.getElementById('studentsPending').textContent || 0) - 
+                    (result.processedCount || result.processed_count));
+            }
         }, 1000);
         
     } catch (error) {
@@ -2852,7 +2932,7 @@ async function loadAdminList() {
 // Add at the top: check login and redirect if not logged in
 (function() {
     if (!localStorage.getItem('userRole')) {
-        window.location.href = '/static/login.html';
+        window.location.href = '/login';
     }
 })();
 

@@ -27,14 +27,13 @@ def get_gallery_info(gallery_path: str) -> Optional[GalleryInfo]:
     
     # Load the gallery file
     try:
-        gallery_data = torch.load(gallery_path)
-        
+        gallery_data = torch.load(gallery_path, weights_only=False)
         # Handle both formats
         if isinstance(gallery_data, dict) and "identities" in gallery_data:
             identities = gallery_data["identities"]
         else:
             identities = list(gallery_data.keys())
-            
+        
         count = len(identities)
         
         return GalleryInfo(
@@ -90,7 +89,7 @@ def recognize_faces(
     for gallery_path in gallery_paths:
         if os.path.exists(gallery_path):
             try:
-                gallery_data = torch.load(gallery_path)
+                gallery_data = torch.load(gallery_path, weights_only=False)
                 # Handle different gallery formats
                 if isinstance(gallery_data, dict):
                     if "identities" in gallery_data:
@@ -101,6 +100,7 @@ def recognize_faces(
                 print(f"Error loading gallery {gallery_path}: {e}")
     
     if not combined_gallery:
+        print("No galleries found or empty galleries")
         return frame, []
     
     # Step 1: Detect faces using YOLO

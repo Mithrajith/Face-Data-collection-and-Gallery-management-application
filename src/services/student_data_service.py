@@ -1,7 +1,10 @@
 import os
 import json
 import shutil
+import gc
 from typing import List, Dict, Any
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from models.pydantic_models import StudentInfo, StudentDataSummary
 from services.face_processing import extract_frames, detect_and_crop_faces
@@ -33,7 +36,52 @@ def get_students_in_folder(dept: str, year: str) -> List[StudentInfo]:
                     try:
                         with open(json_file, 'r') as f:
                             data = json.load(f)
+                            
+                            # Handle missing required fields
+                            if 'regNo' not in data:
+                                data['regNo'] = student_folder
+                                
+                            if 'name' not in data:
+                                data['name'] = f"Student {student_folder}"
+                                
+                            if 'sessionId' not in data:
+                                data['sessionId'] = f"session_{student_folder}"
+                                
+                            if 'year' not in data:
+                                data['year'] = year
+                                
+                            if 'dept' not in data:
+                                data['dept'] = dept
+                                
+                            if 'batch' not in data:
+                                data['batch'] = f"{dept}_{year}"
+                                
+                            if 'startTime' not in data:
+                                data['startTime'] = ""
+                                
+                            if 'videoUploaded' not in data:
+                                data['videoUploaded'] = os.path.exists(os.path.join(student_path, f"{student_folder}.mp4"))
+                                
+                            if 'facesExtracted' not in data:
+                                data['facesExtracted'] = False
+                                
+                            if 'facesOrganized' not in data:
+                                data['facesOrganized'] = False
+                                
+                            if 'videoPath' not in data:
+                                data['videoPath'] = os.path.join(student_path, f"{student_folder}.mp4")
+                                
+                            if 'facesCount' not in data:
+                                data['facesCount'] = 0
+                            
+                            # Try to create the StudentInfo object with the fixed data
                             students.append(StudentInfo(**data))
+                            
+                            # If we had to fix the JSON, save it back to the file
+                            if any(k not in data for k in ['name', 'regNo', 'sessionId', 'year', 'dept', 'batch']):
+                                with open(json_file, 'w') as f:
+                                    json.dump(data, f, indent=2)
+                                    
                     except Exception as e:
                         print(f"Error reading student data {json_file}: {e}")
     
@@ -60,12 +108,11 @@ def get_student_data_summary(dept: str, year: str) -> StudentDataSummary:
     )
 
 def process_student_video(student: StudentInfo) -> Dict[str, Any]:
-    """Process a single student's video to extract faces and organize them in gallery structure"""
     try:
+        # Remove psutil for environments where it's not available
         # Source paths (where video is stored)
         student_source_folder = os.path.join(STUDENT_DATA_DIR, f"{student.dept}_{student.year}", student.regNo)
         video_path = os.path.join(student_source_folder, f"{student.regNo}.mp4")
-        
         if not os.path.exists(video_path):
             return {"success": False, "error": f"Video file not found: {video_path}"}
         
@@ -88,6 +135,10 @@ def process_student_video(student: StudentInfo) -> Dict[str, Any]:
         for frame_path in frame_paths:
             face_paths = detect_and_crop_faces(frame_path, student_gallery_folder)
             all_face_paths.extend(face_paths)
+            # Memory cleanup after each frame
+            del face_paths
+            gc.collect()
+        faces_count = len(all_face_paths)  # <-- define before deleting
         
         # Clean up temporary frames directory
         try:
@@ -101,29 +152,48 @@ def process_student_video(student: StudentInfo) -> Dict[str, Any]:
         
         # Update student JSON file (only one JSON file per student)
         json_file = os.path.join(student_source_folder, f"{student.regNo}.json")
-        if os.path.exists(json_file):
-            with open(json_file, 'r') as f:
-                student_data = json.load(f)
-        else:
-            student_data = student.dict()
+        try:
+            if os.path.exists(json_file):
+                with open(json_file, 'r') as f:
+                    student_data = json.load(f)
+            else:
+                student_data = student.dict()
+
+            # Ensure all required fields for StudentInfo are present
+            required_fields = [
+                "sessionId", "regNo", "name", "year", "dept", "batch", "startTime",
+                "videoUploaded", "facesExtracted", "facesOrganized", "videoPath", "facesCount"
+            ]
+            for field in required_fields:
+                if field not in student_data:
+                    student_data[field] = getattr(student, field, None)
+
+            # Update processing status
+            student_data["facesExtracted"] = True
+            student_data["facesOrganized"] = True
+            student_data["facesCount"] = len(all_face_paths)
+
+            # Save updated JSON file
+            with open(json_file, 'w') as f:
+                json.dump(student_data, f, indent=2)
+        except Exception as e:
+            print(f"Error updating student JSON file: {e}")
+            return {"success": False, "error": f"Error updating student JSON file: {e}"}
         
-        # Update processing status
-        student_data["facesExtracted"] = True
-        student_data["facesOrganized"] = True
-        student_data["facesCount"] = len(all_face_paths)
-        
-        # Save updated JSON file
-        with open(json_file, 'w') as f:
-            json.dump(student_data, f, indent=2)
-        
+        # Memory cleanup after each student
+        del all_face_paths
+        gc.collect()
         return {
             "success": True, 
-            "faces_extracted": len(all_face_paths),
+            "faces_extracted": faces_count,
             "frames_processed": len(frame_paths),
             "gallery_path": student_gallery_folder
         }
-        
+    except MemoryError as e:
+        print(f"MemoryError processing student {student.regNo}: {e}")
+        return {"success": False, "error": f"MemoryError: {str(e)}"}
     except Exception as e:
+        print(f"Exception processing student {getattr(student, 'regNo', 'unknown')}: {e}")
         return {"success": False, "error": str(e)}
 
 def delete_students_by_quality(dept: str, year: str, quality_category: str) -> Dict[str, Any]:
@@ -224,42 +294,47 @@ def process_borderline_students(dept: str, year: str) -> Dict[str, Any]:
 def process_students_videos(dept: str, year: str) -> Dict[str, Any]:
     """Process all pending students' videos in a department-year to extract faces"""
     try:
-        # Get pending students
+        # Remove psutil for environments where it's not available
+        # ...existing code...
         students = get_students_in_folder(dept, year)
         pending_students = [s for s in students if s.videoUploaded and not s.facesExtracted]
-        
-        # Filter only quality-passed students
         quality_passed_students = [s for s in pending_students if s.qualityCheck == "pass"]
-        
         if not quality_passed_students:
             return {
                 "success": True,
                 "message": "No quality-passed students to process. Please run quality check first.",
                 "processed_count": 0
             }
-        
-        # Process each quality-passed student
         results = []
         processed_count = 0
-        
+        processed_students = []  # Define a list to track successfully processed students
         for student in quality_passed_students:
-            result = process_student_video(student)
+            try:
+                result = process_student_video(student)
+            except Exception as e:
+                print(f"Exception in process_student_video: {e}")
+                result = {"success": False, "error": str(e)}
             results.append({
                 "student": student.regNo,
                 "name": student.name,
                 "result": result
             })
-            
             if result["success"]:
                 processed_count += 1
-        
+                processed_students.append(student)  # Add successfully processed students to the list
         return {
             "success": True,
             "message": f"Processed {processed_count} out of {len(quality_passed_students)} quality-passed students",
             "processed_count": processed_count,
             "total_pending": len(quality_passed_students),
-            "details": results
+            "processedCount": processed_count,  # Adding this property for frontend compatibility
+            "totalPending": len(quality_passed_students),  # Adding this property for frontend compatibility
+            "details": results,
+            "students": [student.dict() for student in processed_students]  # Add student info for display
         }
-        
+    except MemoryError as e:
+        print(f"MemoryError in batch: {e}")
+        return {"success": False, "error": f"MemoryError: {str(e)}"}
     except Exception as e:
+        print(f"Exception in batch: {e}")
         return {"success": False, "error": f"Error processing students: {str(e)}"}
