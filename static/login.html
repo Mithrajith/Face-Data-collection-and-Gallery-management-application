@@ -3,22 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Face Recognition Gallery Manager</title>
+    <title>Login - Gallery Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css?v=1.1">
+    <style>
+        body {
+            min-height: 100vh;
+            background: #f4f6fb;
+        }
+        .login-card {
+            max-width: 370px;
+            width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 1.2rem;
+            box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.10);
+            padding: 2.5rem 2rem 2rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-logo {
+            width: 64px;
+            margin-bottom: 1.2rem;
+        }
+        .login-title {
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 0.2rem rgba(37,99,235,.10);
+        }
+        .btn-primary {
+            background: #2563eb;
+            border: none;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary:hover {
+            background: #1e40af;
+        }
+        .input-group .btn {
+            border-radius: 0 0.375rem 0.375rem 0;
+        }
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 1.5rem 0.5rem;
+            }
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <div class="container d-flex align-items-center justify-content-center min-vh-100">
-        <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
-            <h3 class="mb-4 text-center text-primary">Login</h3>
-            <form id="loginForm">
+        <div class="login-card">
+            <img src="/static/images/gallery.png" alt="Logo" class="login-logo">
+            <div class="login-title">Gallery Manager Login</div>
+            <form id="loginForm" style="width:100%">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" required>
+                    <input type="text" class="form-control" id="username" required autofocus>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" required>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1">
+                            <span id="togglePasswordIcon" class="bi bi-eye"></span>
+                        </button>
+                    </div>
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Login</button>
@@ -27,7 +82,22 @@
             </form>
         </div>
     </div>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <script>
+    // Show/hide password toggle
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const pwd = document.getElementById('password');
+        const icon = document.getElementById('togglePasswordIcon');
+        if (pwd.type === 'password') {
+            pwd.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            pwd.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value;
