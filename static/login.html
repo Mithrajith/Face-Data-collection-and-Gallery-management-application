@@ -108,13 +108,16 @@
             body: JSON.stringify({ username, password })
         });
         const data = await res.json();
+        // ...existing code...
         if (res.ok && data.success) {
             localStorage.setItem('userRole', data.role);
+            localStorage.setItem('gallerySessionStart', Date.now().toString()); // <-- Add this line
             window.location.href = '/';
         } else {
             document.getElementById('loginError').innerText = data.message || 'Login failed';
             document.getElementById('loginError').style.display = 'block';
         }
+        // ...existing code...
     });
     </script>
 </body>

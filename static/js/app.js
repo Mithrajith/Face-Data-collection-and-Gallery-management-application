@@ -2210,70 +2210,63 @@ async function loadStudentDataFolders() {
 async function handleLoadStudentData(event) {
     event.preventDefault();
     console.log("Load student data form submitted");
-    
+
     const year = document.getElementById('studentBatchYear').value;
     const department = document.getElementById('studentDepartment').value;
-    
+
     if (!year || !department) {
         showAlert('error', 'Please select both batch year and department');
         return;
     }
-    
-    // Show loading indicator
+
     const btnLoad = document.getElementById('btnLoadStudentData');
     if (btnLoad) {
         btnLoad.disabled = true;
         btnLoad.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Loading...';
     }
-    
+
     try {
-        // Load student data summary
         const response = await fetch(`${API_BASE_URL}/student-data/${department}/${year}/summary`);
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.detail || 'Failed to load student data');
         }
-        
+
         const summary = await response.json();
         console.log("Student data summary:", summary);
-        
-        // Update statistics display
+
         document.getElementById('totalStudents').textContent = summary.total_students;
         document.getElementById('studentsWithVideo').textContent = summary.students_with_video;
         document.getElementById('studentsPending').textContent = summary.students_pending;
         document.getElementById('studentsProcessed').textContent = summary.students_processed;
-        
-        // Show statistics section
+
         document.getElementById('studentDataStats').style.display = 'block';
-        
-        // Enable/disable process button based on pending count
+
         const btnProcess = document.getElementById('btnProcessStudentVideos');
         if (btnProcess) {
             btnProcess.disabled = summary.students_pending === 0;
-            if (summary.students_pending > 0) {
-                btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${summary.students_pending} Pending Videos`;
-            } else {
-                btnProcess.innerHTML = '<i class="fas fa-cog me-2"></i>No Videos to Process';
-            }
+            btnProcess.innerHTML = summary.students_pending > 0
+                ? `<i class="fas fa-cog me-2"></i>Process ${summary.students_pending} Pending Videos`
+                : '<i class="fas fa-cog me-2"></i>No Videos to Process';
         }
-        
-        // Store current selection for processing
-        window.currentStudentData = { dept: department, year: year };
-        
-        // Quality check button is always visible after loading data
+
         const btnQualityCheck = document.getElementById('btnQualityCheck');
         if (btnQualityCheck) {
             btnQualityCheck.disabled = false;
             btnQualityCheck.innerHTML = '<i class="fas fa-shield-alt me-2"></i>Check Quality First';
         }
-        
+
+        // Store selected data
+        window.currentStudentData = { dept: department, year: year };
+
     } catch (error) {
         console.error("Error loading student data:", error);
         showAlert('error', error.message);
     } finally {
+        // ✅ Re-enable Load button
         if (btnLoad) {
-            btnLoad
+            btnLoad.disabled = false;
             btnLoad.innerHTML = '<i class="fas fa-search me-2"></i>Load Student Data';
         }
     }
