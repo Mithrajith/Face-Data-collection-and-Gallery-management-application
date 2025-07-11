@@ -151,6 +151,8 @@ fi
 echo -e "${GREEN}Environment variables configured.${NC}"
 
 chmod +x launch.sh
+chmod +x generate_ssl_cert.sh
+./generate_ssl_cert.sh
 chmod +x data_collection/launch.sh
 
 echo -e "${BOLD}${GREEN}Setup complete! 🎉${NC}"
