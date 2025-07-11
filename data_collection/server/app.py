@@ -166,6 +166,17 @@ def index():
     static_folder = app.static_folder or 'static'
     return send_from_directory(static_folder, 'index.html')
 
+@app.route('/login')
+def login():
+    static_folder = app.static_folder or 'static'
+    return send_from_directory(static_folder, 'login.html')
+    
+@app.route('/api/check-login', methods=['GET'])
+def check_login():
+    # Check if student is logged in using localStorage on client side
+    # This endpoint is mainly to enable server-side redirection
+    return jsonify({'success': False, 'message': 'Not logged in'}), 401
+
 @app.route('/api/session/start', methods=['POST'])
 def start_session():
     data = request.json
