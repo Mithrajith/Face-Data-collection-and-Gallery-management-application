@@ -101,6 +101,7 @@ def recognize_faces(
                 print(f"Error loading gallery {gallery_path}: {e}")
     
     if not combined_gallery:
+        print("No galleries found or empty galleries")
         return frame, []
     
     # Step 1: Detect faces using YOLO

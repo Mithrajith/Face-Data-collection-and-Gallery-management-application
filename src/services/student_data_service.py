@@ -36,7 +36,52 @@ def get_students_in_folder(dept: str, year: str) -> List[StudentInfo]:
                     try:
                         with open(json_file, 'r') as f:
                             data = json.load(f)
+                            
+                            # Handle missing required fields
+                            if 'regNo' not in data:
+                                data['regNo'] = student_folder
+                                
+                            if 'name' not in data:
+                                data['name'] = f"Student {student_folder}"
+                                
+                            if 'sessionId' not in data:
+                                data['sessionId'] = f"session_{student_folder}"
+                                
+                            if 'year' not in data:
+                                data['year'] = year
+                                
+                            if 'dept' not in data:
+                                data['dept'] = dept
+                                
+                            if 'batch' not in data:
+                                data['batch'] = f"{dept}_{year}"
+                                
+                            if 'startTime' not in data:
+                                data['startTime'] = ""
+                                
+                            if 'videoUploaded' not in data:
+                                data['videoUploaded'] = os.path.exists(os.path.join(student_path, f"{student_folder}.mp4"))
+                                
+                            if 'facesExtracted' not in data:
+                                data['facesExtracted'] = False
+                                
+                            if 'facesOrganized' not in data:
+                                data['facesOrganized'] = False
+                                
+                            if 'videoPath' not in data:
+                                data['videoPath'] = os.path.join(student_path, f"{student_folder}.mp4")
+                                
+                            if 'facesCount' not in data:
+                                data['facesCount'] = 0
+                            
+                            # Try to create the StudentInfo object with the fixed data
                             students.append(StudentInfo(**data))
+                            
+                            # If we had to fix the JSON, save it back to the file
+                            if any(k not in data for k in ['name', 'regNo', 'sessionId', 'year', 'dept', 'batch']):
+                                with open(json_file, 'w') as f:
+                                    json.dump(data, f, indent=2)
+                                    
                     except Exception as e:
                         print(f"Error reading student data {json_file}: {e}")
     
@@ -280,7 +325,10 @@ def process_students_videos(dept: str, year: str) -> Dict[str, Any]:
             "message": f"Processed {processed_count} out of {len(quality_passed_students)} quality-passed students",
             "processed_count": processed_count,
             "total_pending": len(quality_passed_students),
-            "details": results
+            "processedCount": processed_count,  # Adding this property for frontend compatibility
+            "totalPending": len(quality_passed_students),  # Adding this property for frontend compatibility
+            "details": results,
+            "students": [student.dict() for student in processed_students]  # Add student info for display
         }
     except MemoryError as e:
         print(f"MemoryError in batch: {e}")
