@@ -307,6 +307,7 @@ def process_students_videos(dept: str, year: str) -> Dict[str, Any]:
             }
         results = []
         processed_count = 0
+        processed_students = []  # Define a list to track successfully processed students
         for student in quality_passed_students:
             try:
                 result = process_student_video(student)
@@ -320,6 +321,7 @@ def process_students_videos(dept: str, year: str) -> Dict[str, Any]:
             })
             if result["success"]:
                 processed_count += 1
+                processed_students.append(student)  # Add successfully processed students to the list
         return {
             "success": True,
             "message": f"Processed {processed_count} out of {len(quality_passed_students)} quality-passed students",
