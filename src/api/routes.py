@@ -226,42 +226,41 @@ def create_app() -> FastAPI:
         augs_per_image: int = Form(3)
     ):
         """Create a gallery for face recognition from extracted face data"""
-        
-        # Convert department name to ID if a name was provided
+        # Use department name for folder search, not department_id
         dept_info = database.get_department_by_name_or_id(department)
         if dept_info:
-            department_id = dept_info["department_id"]
             department_name = dept_info["name"]
+            department_id = dept_info["department_id"]
             print(f"Found department: ID={department_id}, Name={department_name}")
         else:
-            # Try directly as department ID
-            if department not in database.get_department_ids():
+            # Try directly as department name
+            department_name = department
+            dept_info = database.get_department_by_name_or_id(department_name)
+            if not dept_info:
                 raise HTTPException(status_code=400, detail=f"Invalid department: {department}")
-            department_id = department
-            department_name = database.get_department_by_id(department_id)["name"]
-        
+            department_id = dept_info["department_id"]
+
         # Validate inputs
         if year not in database.get_batch_years():
             raise HTTPException(status_code=400, detail=f"Invalid batch year: {year}")
-        
-        # Get paths
-        data_path = get_data_path(year, department_id)
+
+        # Build folder name as <deptname>_<year>
+        folder_name = f"{department_name}_{year}"
+        data_path = os.path.join(STUDENT_DATA_DIR, folder_name)
         gallery_path = get_gallery_path(year, department_id)
-        
+
         print(f"Looking for data in: {data_path}")
         print(f"Gallery will be created at: {gallery_path}")
-        
+
         if not os.path.exists(data_path):
             raise HTTPException(status_code=400, detail=f"No face data found for {department_name} {year}. Please process videos first. Expected path: {data_path}")
-        
+
         try:
             # Create gallery
             gallery = create_gallery(DEFAULT_MODEL_PATH, data_path, gallery_path, augment_ratio, augs_per_image)
-            
             # Register in database
             identity_count = len(gallery) if gallery else 0
             database.register_gallery(year, department_id, gallery_path, identity_count)
-            
             return {
                 "success": True,
                 "message": f"Gallery created successfully for {department_name} {year}",
@@ -269,7 +268,6 @@ def create_app() -> FastAPI:
                 "identities": identity_count,
                 "identities_count": identity_count  # For frontend compatibility
             }
-            
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error creating gallery: {str(e)}")
 

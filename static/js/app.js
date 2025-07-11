@@ -477,7 +477,7 @@ async function loadBatchYearsAndDepartments() {
                 select.innerHTML = '<option value="" selected disabled>Select Department</option>';
                 if (data.departments && data.departments.length > 0) {
                     data.departments.forEach(dept => {
-                        select.innerHTML += `<option value="${dept.id}">${dept.name} (${dept.id})</option>`;
+                        select.innerHTML += `<option value="${dept.name}">${dept.name} (${dept.id})</option>`;
                     });
                     console.log(`Populated ${selectId} with ${data.departments.length} departments`);
                 } else {
@@ -1382,22 +1382,23 @@ async function loadProcessedDatasets() {
             if (datasets.length === 0) {
                 html = '<div class="alert alert-info">No processed datasets found. Process videos first.</div>';
             } else {
-                datasets.forEach(dataset => {
-                    // Extract department and year from the dataset name (format: DEPT_YEAR)
-                    const parts = dataset.split('_');
-                    const department = parts[0] || 'Unknown';
-                    const year = parts[1] || 'Unknown';
-                    
-                    html += `
-                        <a href="#" class="list-group-item list-group-item-action" 
-                           onclick="selectDatasetForGallery('${year}', '${department}')">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">${department} - ${year} </h5>
-                            </div>
-                            <small class="text-muted">Click to select for gallery creation</small>
-                        </a>
-                    `;
-                });
+datasets.forEach(dataset => {
+    // Extract department name and year from the dataset name (format: DEPTNAME_YEAR)
+    const parts = dataset.split('_');
+    const departmentName = parts[0] || 'Unknown';
+    const year = parts[1] || 'Unknown';
+
+    html += `
+        <a href="#" class="list-group-item list-group-item-action" 
+           onclick="selectDatasetForGallery('${year}', '${departmentName}')">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">${departmentName} - ${year} </h5>
+            </div>
+            <small class="text-muted">Click to select for gallery creation</small>
+        </a>
+    `;
+});
+
             }
             
             html += '</div>';
@@ -1413,30 +1414,31 @@ async function loadProcessedDatasets() {
     }
 }
 
-// Function to select a dataset for gallery creation
-function selectDatasetForGallery(year, department) {
-    // Set the dropdown values
+function selectDatasetForGallery(year, departmentId) {
     const yearSelect = document.getElementById('galleryYear');
     const deptSelect = document.getElementById('galleryDepartment');
-    
+
     if (yearSelect && deptSelect) {
-        // Set department and year
-        Array.from(yearSelect.options).forEach(option => {
-            if (option.value === year) {
-                yearSelect.value = year;
-            }
+        // Check and set the year
+        if (Array.from(yearSelect.options).some(opt => opt.value === year)) {
+            yearSelect.value = year;
+        }
+
+        // Check and set the department ID
+        if (Array.from(deptSelect.options).some(opt => opt.value === departmentId)) {
+            deptSelect.value = departmentId;
+        }
+
+        // Scroll to the form
+        document.getElementById('createGalleryForm')?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
         });
-        
-        Array.from(deptSelect.options).forEach(option => {
-            if (option.value === department) {
-                deptSelect.value = department;
-            }
-        });
-        
-        // Scroll to form
-        document.getElementById('createGalleryForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        console.warn("Dropdowns not found.");
     }
 }
+
 
 /**
  * Toast Notification System
