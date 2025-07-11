@@ -1,7 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Student login enforcement
     if (!localStorage.getItem('studentRegNo')) {
-        window.location.href = '/static/login.html';
+        fetch('/api/check-login', {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                window.location.href = '/login';
+            }
+        })
+        .catch(error => {
+            console.error('Login check failed:', error);
+            window.location.href = '/login';
+        });
         return;
     }
     // Check for secure context

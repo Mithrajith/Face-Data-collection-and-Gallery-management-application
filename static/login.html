@@ -110,7 +110,7 @@
         const data = await res.json();
         if (res.ok && data.success) {
             localStorage.setItem('userRole', data.role);
-            window.location.href = '/static/index.html';
+            window.location.href = '/';
         } else {
             document.getElementById('loginError').innerText = data.message || 'Login failed';
             document.getElementById('loginError').style.display = 'block';

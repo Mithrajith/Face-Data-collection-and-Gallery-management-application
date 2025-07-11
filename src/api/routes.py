@@ -56,6 +56,11 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    @app.get("/login", response_class=FileResponse)
+    async def serve_login():
+        """Serve the login page"""
+        return FileResponse(os.path.join("static", "login.html"))
+
     @app.get("/", response_class=FileResponse)
     async def serve_spa():
         return FileResponse("static/index.html")

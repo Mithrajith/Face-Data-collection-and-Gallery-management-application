@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 // Store session info and redirect to main app
                 localStorage.setItem('studentRegNo', regno);
-                window.location.href = '/static/index.html';
+                window.location.href = '/';
             } else {
                 errorDiv.textContent = data.message || 'Invalid credentials.';
                 errorDiv.classList.remove('d-none');
