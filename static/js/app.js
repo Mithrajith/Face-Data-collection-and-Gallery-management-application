@@ -1,4 +1,45 @@
-// At the very top of app.js, before any other logic:
+// --- SESSION TIMEOUT & BACK NAVIGATION PROTECTION ---
+(function() {
+    const SESSION_KEY = 'gallerySessionStart';
+    const ROLE_KEY = 'userRole';
+    const TIMEOUT_MINUTES = 30;
+    const TIMEOUT_MS = TIMEOUT_MINUTES * 60 * 1000;
+
+    // Helper: clear session
+    function clearSession() {
+        localStorage.removeItem(ROLE_KEY);
+        localStorage.removeItem(SESSION_KEY);
+    }
+
+    // Helper: check session validity
+    function isSessionValid() {
+        const start = localStorage.getItem(SESSION_KEY);
+        if (!start) return false;
+        const now = Date.now();
+        return (now - parseInt(start, 10)) < TIMEOUT_MS;
+    }
+
+    // On every page load, check session
+    if (!localStorage.getItem(ROLE_KEY) || !isSessionValid()) {
+        clearSession();
+        window.location.replace('/static/login.html');
+    }
+
+    // Prevent back navigation after logout/session expiry
+    window.addEventListener('pageshow', function(event) {
+        if (!localStorage.getItem(ROLE_KEY) || !isSessionValid()) {
+            clearSession();
+            window.location.replace('/static/login.html');
+        }
+    });
+
+    // Expose logout function globally
+    window.galleryLogout = function() {
+        clearSession();
+        window.location.replace('/static/login.html');
+    };
+})();
+// --- END SESSION TIMEOUT ---// 
 (function() {
     // If not logged in, redirect to login page
     if (!localStorage.getItem('userRole')) {
