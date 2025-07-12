@@ -388,6 +388,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1500);
 });
 
+// Helper to format batch year for display
+function formatBatchYear(year) {
+    const yearInt = parseInt(year);
+    if (!isNaN(yearInt) && year.length === 4) {
+        return `${yearInt - 4} - ${yearInt}`;
+    }
+    return year;
+}
+
 // Initialize the application - update to include new gallery form selects
 async function init() {
     try {
@@ -442,14 +451,11 @@ async function loadBatchYearsAndDepartments() {
     try {
         console.log("Loading batch years and departments...");
         const response = await fetch(`${API_BASE_URL}/batches`);
-        
         if (!response.ok) {
             throw new Error(`HTTPS ${response.status}: ${response.statusText}`);
         }
-        
         const data = await response.json();
         console.log("Received data:", data);
-
         // Populate Batch Year dropdowns
         const batchYearSelects = ['batchYear', 'galleryYear'];
         batchYearSelects.forEach(selectId => {
@@ -458,7 +464,7 @@ async function loadBatchYearsAndDepartments() {
                 select.innerHTML = '<option value="" selected disabled>Select Batch Year</option>';
                 if (data.years && data.years.length > 0) {
                     data.years.forEach(year => {
-                        select.innerHTML += `<option value="${year}">${year}</option>`;
+                        select.innerHTML += `<option value="${year}">${formatBatchYear(year)}</option>`;
                     });
                     console.log(`Populated ${selectId} with ${data.years.length} years`);
                 } else {
@@ -946,7 +952,7 @@ async function loadAdminData() {
                 li.innerHTML = `
                     <div class="d-flex align-items-center">
                         <i class="fas fa-graduation-cap text-primary me-3"></i>
-                        <span class="fw-medium">${year}</span>
+                        <span class="fw-medium">${formatBatchYear(year)}</span>
                     </div>
                     <button class="btn btn-sm btn-danger delete-batch-year" data-year="${year}">
                         <i class="fas fa-trash"></i>
