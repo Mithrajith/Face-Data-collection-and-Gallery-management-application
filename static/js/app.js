@@ -397,6 +397,37 @@ function formatBatchYear(year) {
     return year;
 }
 
+// Helper to format department name for display (returns a Promise)
+async function formatDepartment(deptId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/departments/name/${deptId}`);
+        if (!response.ok) throw new Error("Department not found");
+        const data = await response.json();
+        return data.name || deptId;
+    } catch (err) {
+        console.error("Error loading department:", err);
+        return deptId; // fallback
+    }
+}
+
+// Example usage: rendering department name in async context
+// Usage in rendering functions (e.g., loadStudentDataFolders)
+async function renderStudentDataFolders(folders) {
+    const container = document.getElementById('studentDataFoldersList');
+    if (!container) return;
+    container.innerHTML = '';
+    for (const folder of folders) {
+        // folder format: deptId_year
+        const [deptId, year] = folder.split('_');
+        const deptName = await formatDepartment(deptId);
+        const yearDisplay = formatBatchYear(year);
+        const item = document.createElement('li');
+        item.className = 'list-group-item';
+        item.textContent = `${deptName} (${deptId}) - ${yearDisplay}`;
+        container.appendChild(item);
+    }
+}
+
 // Initialize the application - update to include new gallery form selects
 async function init() {
     try {
@@ -475,7 +506,7 @@ async function loadBatchYearsAndDepartments() {
             }
         });
 
-        // Populate Department dropdowns
+        // Populate Department dropdowns (value is id, display is name)
         const departmentSelects = ['department', 'galleryDepartment'];
         departmentSelects.forEach(selectId => {
             const select = document.getElementById(selectId);
@@ -483,7 +514,7 @@ async function loadBatchYearsAndDepartments() {
                 select.innerHTML = '<option value="" selected disabled>Select Department</option>';
                 if (data.departments && data.departments.length > 0) {
                     data.departments.forEach(dept => {
-                        select.innerHTML += `<option value="${dept.name}">${dept.name} (${dept.id})</option>`;
+                        select.innerHTML += `<option value="${dept.id}">${dept.name} (${dept.id})</option>`;
                     });
                     console.log(`Populated ${selectId} with ${data.departments.length} departments`);
                 } else {
@@ -1370,55 +1401,54 @@ async function handleCreateGallery(event) {
 async function loadProcessedDatasets() {
     const processedDatasets = document.getElementById('processedDatasets');
     if (!processedDatasets) return;
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/check-directories`);
         const data = await response.json();
-        
-        // Format and display the processed datasets
+
         let html = '';
-        
+
         if (data.data_dir_exists && Array.isArray(data.data_dir_files) && data.data_dir_files.length > 0) {
             html += '<div class="list-group">';
-            
-            // Filter only directories (batch_dept structure)
+
+            // Filter only folders (no files with extensions)
             let datasets = data.data_dir_files.filter(file => !file.includes('.'));
             datasets = datasets.sort((a, b) => a.localeCompare(b));
-            
+
             if (datasets.length === 0) {
                 html = '<div class="alert alert-info">No processed datasets found. Process videos first.</div>';
             } else {
-datasets.forEach(dataset => {
-    // Extract department name and year from the dataset name (format: DEPTNAME_YEAR)
-    const parts = dataset.split('_');
-    const departmentName = parts[0] || 'Unknown';
-    const year = parts[1] || 'Unknown';
+                for (const dataset of datasets) {
+                    // Format: deptId_year
+                    const [deptId, year] = dataset.split('_');
+                    const deptName = await formatDepartment(deptId);  // ✅ wait for name
+                    const yearFormatted = formatBatchYear(year);
 
-    html += `
-        <a href="#" class="list-group-item list-group-item-action" 
-           onclick="selectDatasetForGallery('${year}', '${departmentName}')">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">${departmentName} - ${year} </h5>
-            </div>
-            <small class="text-muted">Click to select for gallery creation</small>
-        </a>
-    `;
-});
-
+                    html += `
+                        <a href="#" class="list-group-item list-group-item-action" 
+                           onclick="selectDatasetForGallery('${year}', '${deptId}')">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">${deptName} (${deptId}) - ${yearFormatted}</h5>
+                            </div>
+                            <small class="text-muted">Click to select for gallery creation</small>
+                        </a>
+                    `;
+                }
             }
-            
+
             html += '</div>';
         } else {
             html = '<div class="alert alert-info">No processed datasets found. Process videos first.</div>';
         }
-        
+
         processedDatasets.innerHTML = html;
-        
+
     } catch (error) {
         console.error('Error loading processed datasets:', error);
         processedDatasets.innerHTML = '<div class="alert alert-danger">Failed to load processed datasets</div>';
     }
 }
+
 
 function selectDatasetForGallery(year, departmentId) {
     const yearSelect = document.getElementById('galleryYear');
@@ -2192,7 +2222,7 @@ async function loadStudentDataFolders() {
             years.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
-                option.textContent = year;
+                option.textContent = formatBatchYear(year);
                 yearSelect.appendChild(option);
             });
         }
@@ -2201,12 +2231,13 @@ async function loadStudentDataFolders() {
         const deptSelect = document.getElementById('studentDepartment');
         if (deptSelect) {
             deptSelect.innerHTML = '<option value="" selected disabled>Select Department</option>';
-            depts.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept;
-                option.textContent = dept;
-                deptSelect.appendChild(option);
-            });
+        for (const dept of depts) {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = await formatDepartment(dept); // ✅ Waits for real name
+            deptSelect.appendChild(option);
+        }
+
         }
         
     } catch (error) {

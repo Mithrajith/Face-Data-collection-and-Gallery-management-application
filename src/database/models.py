@@ -97,7 +97,7 @@ def get_department_by_id(department_id: str) -> Optional[Dict[str, str]]:
         cursor.execute("SELECT department_id, name FROM departments WHERE department_id = ?", (department_id,))
         row = cursor.fetchone()
         if row:
-            return {"id": row['department_id'], "name": row['name']}
+            return {"name": row['name']}
         return None
 
 def get_department_by_name(name: str) -> Optional[Dict[str, str]]:

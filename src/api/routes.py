@@ -61,6 +61,23 @@ def create_app() -> FastAPI:
         """Serve the login page"""
         return FileResponse(os.path.join("static", "login.html"))
 
+    @app.get('/departments/name/{dept_id}', summary="Get department name by ID")
+    async def get_department_name_by_id(dept_id: str):
+        """Get department name by department_id (string or int)"""
+        try:
+            with database.get_db_connection() as conn:
+                cursor = conn.cursor()
+                # Try both possible column names for department ID
+                cursor.execute("SELECT name FROM departments WHERE id = ? OR department_id = ?", (dept_id, dept_id))
+                row = cursor.fetchone()
+                if row:
+                    return JSONResponse({"name": row["name"]})
+                else:
+                    raise HTTPException(status_code=404, detail="Department not found")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error looking up department: {str(e)}")
+
+
     @app.get("/", response_class=FileResponse)
     async def serve_spa():
         return FileResponse("static/index.html")

@@ -17,6 +17,16 @@ def get_db_connection():
     finally:
         conn.close()
 
+def get_department_name_by_id(dept_id):
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM departments WHERE department_id = ?", (dept_id,))
+        row = cursor.fetchone()
+        if row:
+            return jsonify({"name": row["name"]})
+        else:
+            return jsonify({"error": "Department not found"}), 404
+
 def init_db():
     """Initialize the database with required tables."""
     with get_db_connection() as conn:
