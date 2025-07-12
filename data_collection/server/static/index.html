@@ -23,6 +23,11 @@
   
   <!-- Viewport meta tag with additional parameters for better mobile experience -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Additional meta tags for responsive design -->
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0d6efd">
+
 
 </head>
 <body>
@@ -73,7 +78,7 @@
         <i class="bi bi-info-circle"></i>
       </button>
 
-      <div class="camera-wrapper">
+      <!-- <div class="camera-wrapper"> -->
         <div class="camera-container">
           <video id="video" autoplay playsinline></video>
           <div id="face-guide"></div>
@@ -82,7 +87,7 @@
             <div class="camera-footer"></div>
           </div>
         </div>
-      </div>
+      <!-- </div> -->
       
       <div class="controls">
         <div id="progress-bar"><div id="progress"></div></div>
@@ -91,10 +96,6 @@
       <button id="startRecord" class="btn primary">
         <i class="bi bi-record-circle"></i> Start Recording (8s)
       </button>
-      <!-- Recording Controls UI -->
-      <div class="recording-controls">
-        <div class="recording-status"></div>
-      </div>
     </div>
 
     <!-- Completion -->
@@ -266,6 +267,97 @@
       document.documentElement.style.setProperty(
         '--footer-height', `${footerHeight}px`
       );
+
+      // Dynamically adjust width based on screen resolution
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      let containerWidth;
+      
+      // Calculate aspect ratio - useful for adapting to different devices
+      const aspectRatio = screenWidth / screenHeight;
+      
+      // Adjust container width based on device type and screen dimensions
+      if (screenWidth >= 1600) {
+        // Extra large screens
+        containerWidth = Math.min(screenWidth * 0.6, 1400);
+      } else if (screenWidth >= 1200) {
+        // Large desktop screens
+        containerWidth = Math.min(screenWidth * 0.7, 1200);
+      } else if (screenWidth >= 768) {
+        // Medium screens (tablets, small desktops)
+        containerWidth = Math.min(screenWidth * 0.8, 1000);
+      } else if (screenWidth >= 480) {
+        // Mobile landscape
+        containerWidth = Math.min(screenWidth * 0.9, 800);
+      } else {
+        // Small mobile screens
+        containerWidth = screenWidth * 0.95;
+      }
+      
+      // Additional adjustment for unusual aspect ratios (ultrawide monitors or very tall/narrow screens)
+      if (aspectRatio > 2) { // Ultrawide monitors
+        containerWidth = Math.min(containerWidth, screenWidth * 0.5);
+      } else if (aspectRatio < 0.6) { // Very tall screens
+        containerWidth = Math.min(containerWidth, screenWidth * 0.95);
+      }
+
+      // Apply the calculated width
+      container.style.maxWidth = `${containerWidth}px`;
+      
+      // For larger screens, make the form elements bigger for better visibility
+      const formGroups = document.querySelectorAll('.form-group');
+      const inputs = document.querySelectorAll('input, select');
+      const buttons = document.querySelectorAll('.btn');
+      
+      if (screenWidth >= 1200) {
+        formGroups.forEach(group => {
+          group.style.marginBottom = '24px';
+        });
+        
+        inputs.forEach(input => {
+          input.style.padding = '14px 18px';
+          input.style.fontSize = '1.1rem';
+        });
+        
+        buttons.forEach(button => {
+          button.style.padding = '1rem 2rem';
+          button.style.fontSize = '1.1rem';
+        });
+      } else {
+        // Reset to default styles for smaller screens
+        formGroups.forEach(group => {
+          group.style.marginBottom = '';
+        });
+        
+        inputs.forEach(input => {
+          input.style.padding = '';
+          input.style.fontSize = '';
+        });
+        
+        buttons.forEach(button => {
+          button.style.padding = '';
+          button.style.fontSize = '';
+        });
+      }
+
+      // Scale section padding based on screen size and container width
+      const sections = document.querySelectorAll('.section');
+      if (sections.length > 0) {
+        let padding;
+        if (screenWidth < 480) {
+          padding = '1.25rem';
+        } else if (screenWidth < 768) {
+          padding = '1.5rem';
+        } else if (screenWidth < 1200) {
+          padding = '2rem';
+        } else {
+          padding = '2.5rem';
+        }
+        
+        sections.forEach(section => {
+          section.style.padding = padding;
+        });
+      }
     }
   }
   

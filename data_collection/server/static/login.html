@@ -12,6 +12,69 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Viewport meta tag with additional parameters for better mobile experience -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- Additional meta tags for responsive design -->
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0d6efd">
+  
+  <!-- Additional responsive styles for login page -->
+  <style>
+    /* Login-specific responsive adjustments */
+    @media (min-width: 992px) {
+      .card {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      
+      .login-container {
+        display: flex;
+        justify-content: center;
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .card {
+        max-width: 900px;
+      }
+      
+      .card-body {
+        padding: 2.5rem !important;
+      }
+      
+      .form-control {
+        padding: 0.7rem 1rem;
+        font-size: 1.05rem;
+      }
+      
+      .btn {
+        padding: 0.7rem 1rem;
+        font-size: 1.05rem;
+      }
+    }
+    
+    @media (min-width: 1600px) {
+      .card {
+        max-width: 1000px;
+      }
+      
+      .card-body {
+        padding: 3rem !important;
+      }
+      
+      .form-control {
+        padding: 0.8rem 1.2rem;
+        font-size: 1.1rem;
+      }
+      
+      .btn {
+        padding: 0.8rem 1.2rem;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -24,20 +87,18 @@
     </div>
   </header>
 
-  <div class="container mt-5">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card shadow-lg border-0">
-          <div class="card-header text-center bg-primary text-white">
-            <h3><i class="bi bi-person-circle"></i> Student Login</h3>
-          </div>
+  <div class="container">
+    <div class="section">
+      <h1><i class="bi bi-person-circle"></i> Student Login</h1>
+      <div class="login-container">
+        <div class="card shadow-lg border-0 w-100">
           <div class="card-body p-4">
             <form id="login-form">
-              <div class="mb-3">
+              <div class="mb-4">
                 <label for="regno" class="form-label">Register Number</label>
                 <input type="text" class="form-control" id="regno" name="regno" placeholder="Enter registration number" required />
               </div>
-              <div class="mb-3">
+              <div class="mb-4">
                 <label for="dob" class="form-label">Date of Birth</label>
                 <input type="date" class="form-control" id="dob" name="dob" required />
               </div>
@@ -60,5 +121,114 @@
   </footer>
 
   <script src="/static/js/login.js"></script>
+  
+  <script>
+  // Enhanced layout adjustment for better responsive experience
+  function optimizeLayout() {
+    // Disable scrolling on body
+    document.body.style.overflow = 'hidden';
+    
+    const container = document.querySelector('.container');
+    const header = document.querySelector('.header');
+    const footer = document.querySelector('.footer');
+    
+    if (container && header && footer) {
+      // Calculate available height
+      const headerHeight = header.offsetHeight;
+      const footerHeight = footer.offsetHeight;
+      const windowHeight = window.innerHeight;
+      const availableHeight = windowHeight - headerHeight - footerHeight;
+      
+      // Apply calculated height to container
+      container.style.height = `${availableHeight}px`;
+      container.style.overflow = 'auto';
+      
+      // Apply CSS vars for consistent spacing
+      document.documentElement.style.setProperty(
+        '--header-height', `${headerHeight}px`
+      );
+      document.documentElement.style.setProperty(
+        '--footer-height', `${footerHeight}px`
+      );
+
+      // Dynamically adjust width based on screen resolution
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      let containerWidth;
+      
+      // Calculate aspect ratio - useful for adapting to different devices
+      const aspectRatio = screenWidth / screenHeight;
+      
+      // Adjust container width based on device type and screen dimensions
+      if (screenWidth >= 1600) {
+        // Extra large screens
+        containerWidth = Math.min(screenWidth * 0.6, 1400);
+      } else if (screenWidth >= 1200) {
+        // Large desktop screens
+        containerWidth = Math.min(screenWidth * 0.7, 1200);
+      } else if (screenWidth >= 768) {
+        // Medium screens (tablets, small desktops)
+        containerWidth = Math.min(screenWidth * 0.8, 1000);
+      } else if (screenWidth >= 480) {
+        // Mobile landscape
+        containerWidth = Math.min(screenWidth * 0.9, 800);
+      } else {
+        // Small mobile screens
+        containerWidth = screenWidth * 0.95;
+      }
+      
+      // Additional adjustment for unusual aspect ratios
+      if (aspectRatio > 2) { // Ultrawide monitors
+        containerWidth = Math.min(containerWidth, screenWidth * 0.5);
+      } else if (aspectRatio < 0.6) { // Very tall screens
+        containerWidth = Math.min(containerWidth, screenWidth * 0.95);
+      }
+
+      // Apply the calculated width
+      container.style.maxWidth = `${containerWidth}px`;
+      
+      // Scale form elements based on screen size
+      if (screenWidth >= 1200) {
+        // Adjust login form for larger screens
+        const inputs = document.querySelectorAll('.form-control');
+        inputs.forEach(input => {
+          if (screenWidth >= 1600) {
+            input.style.padding = '0.8rem 1.2rem';
+            input.style.fontSize = '1.1rem';
+          } else {
+            input.style.padding = '0.7rem 1rem';
+            input.style.fontSize = '1.05rem';
+          }
+        });
+      }
+      
+      // Adjust section padding based on screen size
+      const sections = document.querySelectorAll('.section');
+      if (sections.length > 0) {
+        let padding;
+        if (screenWidth < 480) {
+          padding = '1.25rem';
+        } else if (screenWidth < 768) {
+          padding = '1.5rem';
+        } else if (screenWidth < 1200) {
+          padding = '2rem';
+        } else {
+          padding = '2.5rem';
+        }
+        
+        sections.forEach(section => {
+          section.style.padding = padding;
+        });
+      }
+    }
+  }
+  
+  // Run on load and resize
+  window.addEventListener('DOMContentLoaded', optimizeLayout);
+  window.addEventListener('resize', optimizeLayout);
+  
+  // Also run after fonts load to account for any layout shifts
+  document.fonts.ready.then(optimizeLayout);
+  </script>
 </body>
 </html>
