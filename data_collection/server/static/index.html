@@ -6,6 +6,7 @@
   <title>Face Video Collection</title>
   <link favicon rel="icon" href="static/images/data_collection.png" type="image/x-icon">
 
+  <!-- All responsive styles merged into a single CSS file -->
   <link rel="stylesheet" href="/static/css/style.css"/>
   <!-- Bootstrap Icons CDN -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -19,18 +20,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Viewport meta tag with additional parameters for better mobile experience -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 </head>
 <body>
-  <!-- Header -->
+  <!-- Header - Optimized for both mobile and desktop -->
   <header class="header">
-    <div class="header-container">
-      <div class="nba">
-        <img src="/static/images/image.png" class="nba-logo" alt="Institution Logo" />
-      </div>
-      <div class="college-info">
-        <h1>SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
-      </div>
+    <div class="nba">
+      <img src="/static/images/image.png" class="nba-logo" alt="Institution Logo" />
+    </div>
+    <div class="college-info">
+      <h1>SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
     </div>
   </header>
 
@@ -71,12 +73,14 @@
         <i class="bi bi-info-circle"></i>
       </button>
 
-      <div class="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <div id="face-guide"></div>
-        <div class="camera-overlay">
-          <div class="camera-header"></div>
-          <div class="camera-footer"></div>
+      <div class="camera-wrapper">
+        <div class="camera-container">
+          <video id="video" autoplay playsinline></video>
+          <div id="face-guide"></div>
+          <div class="camera-overlay">
+            <div class="camera-header"></div>
+            <div class="camera-footer"></div>
+          </div>
         </div>
       </div>
       
@@ -85,12 +89,11 @@
         <div id="instruction">Follow the instructions below</div>
       </div>
       <button id="startRecord" class="btn primary">
-          <i class="bi bi-record-circle"></i> Start Recording (8s)
-        </button>
+        <i class="bi bi-record-circle"></i> Start Recording (8s)
+      </button>
       <!-- Recording Controls UI -->
       <div class="recording-controls">
-        
-        <!-- Stop record button completely removed as requested -->
+        <div class="recording-status"></div>
       </div>
     </div>
 
@@ -113,32 +116,34 @@
     </div>
 
 
-  <!-- Modal: Instructions -->
+  <!-- Modal: Instructions - Optimized for mobile view -->
   <div id="modal1" class="modal">
     <div class="modal-content">
       <h2><i class="bi bi-camera-video"></i> Recording Instructions</h2>
       
       <div class="instruction-list">
-        <p><strong>For best results, please follow these guidelines:</strong></p>
-        <p><strong><i class="bi bi-brightness-high"></i> Lighting:</strong> Choose a well-lit area with even light on your face</p>
-        <p><strong><i class="bi bi-aspect-ratio"></i> Framing:</strong> Ensure only your face is visible in the frame</p>
-        <p><strong><i class="bi bi-arrows-move"></i> Position:</strong> Hold your device at arm's length from your face</p>
-        <p><strong><i class="bi bi-shield-check"></i> Background:</strong> Use a plain, non-reflective background</p>
+        <p><strong>For best results:</strong></p>
+        <p><strong><i class="bi bi-brightness-high"></i> Lighting:</strong> Well-lit area with even light</p>
+        <p><strong><i class="bi bi-aspect-ratio"></i> Framing:</strong> Only your face in frame</p>
+        <p><strong><i class="bi bi-arrows-move"></i> Position:</strong> Arm's length from face</p>
+        <p><strong><i class="bi bi-shield-check"></i> Background:</strong> Plain, non-reflective</p>
       </div>
       
-      <p><strong>Follow this 8-second sequence:</strong></p>
-      <ol>
-        <li>📷 Look directly at the camera (1 sec)</li>
-        <li>➡️ Slowly turn your head to the right (2 sec)</li>
-        <li>⬅️ Slowly turn your head to the left (2 sec)</li>
-        <li>⬇️ Slightly tilt your head down (2 sec)</li>
-        <li>📷 Return to looking straight at the camera (1 sec)</li>
-      </ol>
+      <p><strong>8-second recording sequence:</strong></p>
+      <div class="recording-steps">
+        <div class="step">1. Look at camera (1s)</div>
+        <div class="step">2. Turn right (2s)</div>
+        <div class="step">3. Turn left (2s)</div>
+        <div class="step">4. Tilt down (2s)</div>
+        <div class="step">5. Look at camera (1s)</div>
+      </div>
       
-      <!-- Trigger camera + recording -->
-      <button id="startRecording" onclick="initCamera(true)" class="btn btn-primary">
-        <i class="bi bi-camera"></i> Start Camera <i class="bi bi-arrow-right"></i>
-      </button>
+      <div class="modal-button-container">
+        <!-- Trigger camera + recording -->
+        <button id="startRecording" onclick="initCamera(true)" class="btn btn-primary">
+          <i class="bi bi-camera"></i> Start Camera
+        </button>
+      </div>
     </div>
   </div>
 
@@ -226,17 +231,51 @@
     });
   </script>
 
-  <!-- Enhanced Fixed/Sticky Footer -->
-  <footer class="footer fixed-footer bg-gradient" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid rgba(0,0,0,0.05); z-index: 999; height: auto; max-height: 30px; padding: 5px 0; font-size: 12px;">
-    <div class="container-fluid px-3">
-        <div class="text-center">
-            <small class="mb-0">
-                <span class="text-muted">Designed & Developed by</span>
-                <span class="fw-medium ms-1"><a href="/about" style="text-decoration: none;">AI & ML Students</a></span>
-            </small>
-        </div>
-    </div>
+  <footer class="footer">
+    <small>
+      <span class="text-muted">Designed & Developed by</span>
+      <span class="fw-medium"><a href="/about" style="text-decoration: none;">AI & ML Students</a></span>
+    </small>
   </footer>
+  
+  <script>
+  // Enhanced layout adjustment for better responsive experience
+  function optimizeLayout() {
+    // Disable scrolling on body
+    document.body.style.overflow = 'hidden';
+    
+    const container = document.querySelector('.container');
+    const header = document.querySelector('.header');
+    const footer = document.querySelector('.footer');
+    
+    if (container && header && footer) {
+      // Calculate available height
+      const headerHeight = header.offsetHeight;
+      const footerHeight = footer.offsetHeight;
+      const windowHeight = window.innerHeight;
+      const availableHeight = windowHeight - headerHeight - footerHeight;
+      
+      // Apply calculated height to container
+      container.style.height = `${availableHeight}px`;
+      container.style.overflow = 'auto';
+      
+      // Apply CSS vars for consistent spacing
+      document.documentElement.style.setProperty(
+        '--header-height', `${headerHeight}px`
+      );
+      document.documentElement.style.setProperty(
+        '--footer-height', `${footerHeight}px`
+      );
+    }
+  }
+  
+  // Run on load and resize
+  window.addEventListener('DOMContentLoaded', optimizeLayout);
+  window.addEventListener('resize', optimizeLayout);
+  
+  // Also run after fonts load to account for any layout shifts
+  document.fonts.ready.then(optimizeLayout);
+  </script>
     
 </body>
 </html>

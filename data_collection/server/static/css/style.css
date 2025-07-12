@@ -5,6 +5,7 @@
 }
 
 :root {
+    /* Color variables */
     --primary-color: #0d6efd;
     --primary-dark: #0b5ed7;
     --secondary-color: #6c757d;
@@ -13,9 +14,19 @@
     --dark-text: #212529;
     --light-text: #495057;
     --border-color: #dee2e6;
+    
+    /* Design system variables */
     --shadow: 0 5px 15px rgba(0,0,0,0.05);
     --border-radius: 12px;
     --transition: all 0.3s ease;
+    
+    /* Responsive layout variables */
+    --header-height-desktop: 60px;
+    --header-height-mobile: 45px;
+    --footer-height-desktop: 44px;
+    --footer-height-mobile: 28px;
+    --footer-font-desktop: 0.85rem;
+    --footer-font-mobile: 0.65rem;
 }
 
 body {
@@ -27,6 +38,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    padding-bottom: 50px;
 }
 
 .container {
@@ -178,33 +190,7 @@ input:focus, select:focus {
     box-shadow: 0 6px 16px rgba(108, 117, 125, 0.25);
 }
 
-/* Camera Container Styles */
-.camera-container {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    height: 0;
-    padding-bottom: 75%;
-    background-color: #000;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-    margin: 25px 0;
-}
-
-/* Increase camera container size on mobile for better user experience */
-@media (max-width: 768px) {
-    .camera-container {
-        padding-bottom: 115%; /* Make it more square on mobile */
-    }
-}
-
-@media (max-width: 480px) {
-    .camera-container {
-        padding-bottom: 140%; /* Even larger on very small devices */
-        margin: 15px 0;
-    }
-}
+/* Camera Container Styles moved to consolidated section below */
 
 .camera-overlay {
     position: absolute;
@@ -297,15 +283,19 @@ canvas {
 .modal-content {
     background: #fff;
     margin: 5% auto;
-    padding: 2.5rem;
+    padding: 2rem 1.8rem;
     border-radius: var(--border-radius);
     max-width: 500px;
     width: 90%;
     text-align: left;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 85vh;
     animation: slideUp 0.4s ease-out;
+    display: flex;
+    flex-direction: column;
 }
 
 @keyframes slideUp {
@@ -364,6 +354,8 @@ canvas {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    padding: 12px 24px;
+    min-height: 55px; /* Increased height for better tap target on mobile */
 }
 
 .modal-content button.btn i {
@@ -582,13 +574,18 @@ canvas {
 }
 
 .recording-controls {
-    margin-top: 25px;
+    margin-top: 15px;
     text-align: center;
-    padding: 20px;
+    padding: 15px;
     border-radius: var(--border-radius);
     background-color: white;
     box-shadow: var(--shadow);
     transition: var(--transition);
+    clear: both;
+    display: block;
+    position: relative;
+    z-index: 10;
+    margin-bottom: 15px;
 }
 
 .timer {
@@ -757,26 +754,17 @@ canvas {
 
 /* Header Styles */
 .header {
-  padding: 6px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-bottom: 1px solid #eaeaea;
-  background-color: #f8f9fa;
-  margin-bottom: 12px;
-  width: 100%;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 8px 0 4px 0;
+  margin-bottom: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
 
 .header-container {
   display: flex;
   align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding: 0 10px;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 .nba, .naac {
@@ -785,8 +773,8 @@ canvas {
 }
 
 .nba-logo, .naac-logo {
-  height: 40px; /* Further reduced from 50px */
-  width: auto;
+  max-width: 48px;
+  height: auto;
   display: block;
   margin: 0 auto 1px;
   transition: transform 0.2s ease;
@@ -809,13 +797,16 @@ canvas {
 }
 
 .college-info h1 {
-  font-size: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
   color: #006400;
   margin: 3px 0;
   word-wrap: break-word;
   font-weight: 700;
   text-shadow: 0 1px 1px rgba(0,0,0,0.1);
-  letter-spacing: 0.3px;
 }
 
 .college-info p {
@@ -877,12 +868,12 @@ canvas {
     }
 }
 
+/* Media queries consolidated below in responsive section */
+
 /* Make camera container smaller on desktop/laptop so controls are visible without scrolling */
 @media (min-width: 992px) {
   .camera-container {
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 400px;
     padding-bottom: 30%; /* Reduced height for less tall aspect ratio */
   }
   .camera-container video {
@@ -894,18 +885,15 @@ canvas {
 
 @media screen and (max-width: 480px) {
     .nba-logo {
-        height: 30px;
+        max-width: 36px;
     }
     
     .college-info h1 {
-        font-size: 11px;
-        line-height: 1.2;
-        margin: 1px 0;
+        font-size: 0.95rem;
     }
     
     .header {
-        padding: 4px;
-        margin-bottom: 8px;
+        padding: 4px 0 2px 0;
     }
     
     .section {
@@ -935,42 +923,454 @@ canvas {
     }
 }
 
-/* Fixed/Sticky Footer Styles */
-.fixed-footer {
-    transition: all 0.3s ease;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
+/* Footer styles moved to consolidated section below */
+
+/* =================================
+   ENHANCED MOBILE & DESKTOP RESPONSIVE STYLES 
+   ================================= */
+/* Root variables consolidated in top :root section */
+
+/* Base responsive layout adjustments */
+body {
+  padding: 0 !important;
+  margin: 0 !important;
+  padding-top: var(--header-height-desktop) !important;
+  padding-bottom: var(--footer-height-desktop) !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
 }
 
-/* Adjust back-to-home button to not overlap with footer */
-.back-to-home {
-    bottom: 90px;
+/* Fixed header with reduced size */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  z-index: 1000;
+  height: var(--header-height-desktop);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
 }
 
-/* Mobile responsiveness for sticky footer */
-@media (max-width: 767px) {
-    .fixed-footer {
-        padding: 15px 5px;
-        width: 100%;
-        left: 0;
-        transform: none;
-        border-radius: 0;
-    }
-    
-    .fixed-footer h5 {
-        font-size: 1rem;
-    }
-    
-    .fixed-footer p {
-        font-size: 0.8rem;
-    }
-    
-    .fixed-footer .fa-2x {
-        font-size: 1.5rem;
-    }
-    
-    /* Make home button appear above footer but in different corner */
-    .back-to-home {
-        bottom: 80px;
-        right: 20px;
-    }
+/* Compact header layout */
+.nba {
+  flex: 0 0 auto;
+}
+
+.nba-logo {
+  max-height: 40px;
+  width: auto;
+}
+
+.college-info {
+  flex: 1;
+  padding: 0 5px;
+}
+
+.college-info h1 {
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Optimized container for no scrolling */
+.container {
+  max-width: 800px;
+  width: 100%;
+  margin: 10px auto;
+  padding: 0 15px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--header-height-desktop) - var(--footer-height-desktop) - 20px);
+  overflow-y: auto;
+}
+
+/* Fixed footer with responsive size */
+.footer, .fixed-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: var(--footer-height-desktop);
+  background: #fff;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1000;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  font-size: var(--footer-font-desktop);
+}
+
+.footer small {
+  font-size: var(--footer-font-desktop);
+}
+
+/* Camera container optimizations */
+.camera-container {
+  width: 100%;
+  max-width: 380px;
+  margin: 15px auto 25px auto;
+  aspect-ratio: 4/3;
+  position: relative;
+  height: auto !important;
+  padding: 0 !important;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  max-height: 240px; /* Reduced height to ensure button visibility */
+  background-color: #000;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.camera-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Camera wrapper for better proportions */
+.camera-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px 0;
+}
+
+/* Recording steps styling for mobile-friendly display */
+.recording-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 8px;
+  background: rgba(13, 110, 253, 0.05);
+  border-radius: 8px;
+  overflow-y: visible;
+  max-height: none; /* Remove any height constraints */
+}
+
+.recording-steps .step {
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.recording-steps .step::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+/* Improved modal for mobile */
+.modal-content {
+  width: 90%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Instruction styles */
+#instruction {
+  font-weight: 600;
+  color: var(--primary-color);
+  background: rgba(13, 110, 253, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Fix section scroll issues */
+.section {
+  max-height: none !important;
+  overflow: visible !important;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+/* Fix for hidden sections to properly hide */
+.hidden {
+  display: none !important;
+}
+
+/* Optimize completion screen */
+.completion-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.success-icon {
+  color: #28a745;
+  font-size: 4rem;
+  margin-bottom: 15px;
+}
+
+/* Ensure the buttons are properly sized and positioned */
+.btn {
+  width: auto !important;
+  min-width: 120px;
+}
+
+/* Fix for record button */
+#startRecord {
+  width: 100% !important;
+  max-width: 250px;
+  margin: 5px auto 20px auto; /* Reduced margins */
+  display: block;
+  padding: 12px 20px;
+  min-height: 50px;
+  position: relative;
+  z-index: 20; /* Ensure it's above other elements */
+}
+
+/* Improved info button for better visibility */
+#infoBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  border: none;
+  color: var(--primary-color);
+}
+
+/* Fix for progress bar positioning */
+.controls {
+  width: 100%;
+  max-width: 400px;
+  margin: 10px auto;
+}
+
+#progress-bar {
+  height: 6px;
+}
+
+/* Button container in modal for better positioning */
+.modal-button-container {
+  margin-top: 15px;
+  padding: 8px 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Recording status for better visibility of recording controls */
+.recording-status {
+  height: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* Ensure the recording controls are fully visible */
+#camera-section {
+  padding-bottom: 40px !important; /* Reduced to minimize scrolling */
+}
+
+/* =================================
+   RESPONSIVE BREAKPOINTS 
+   ================================= */
+@media (max-width: 768px) {
+  body {
+    padding-top: var(--header-height-mobile) !important;
+    padding-bottom: var(--footer-height-mobile) !important;
+  }
+  
+  .header {
+    height: var(--header-height-mobile);
+  }
+  
+  .nba-logo {
+    max-height: 30px;
+  }
+  
+  .college-info h1 {
+    font-size: 0.8rem;
+  }
+  
+  .container {
+    padding: 0 10px;
+    height: calc(100vh - var(--header-height-mobile) - var(--footer-height-mobile) - 20px);
+  }
+  
+  .section {
+    padding: 15px;
+    margin-bottom: 10px;
+  }
+  
+  h1 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  
+  h2 {
+    font-size: 1.1rem;
+  }
+  
+  .footer {
+    height: var(--footer-height-mobile);
+  }
+  
+  .footer small {
+    font-size: var(--footer-font-mobile);
+  }
+  
+  /* Camera optimization for mobile */
+  .camera-container {
+    max-width: 100%;
+    aspect-ratio: 3/4; /* More portrait for mobile */
+    margin: 10px auto;
+    padding-bottom: 90%; /* Reduced height but still functional on mobile */
+    max-height: 220px;
+  }
+  
+  /* Compact form controls */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  label {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+  }
+  
+  input, select {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+  
+  /* Smaller modals for mobile */
+  .modal-content {
+    padding: 15px;
+    margin: 30px auto;
+  }
+  
+  .modal-content h2 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+  
+  .modal-content p, .modal-content li {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+  
+  .instruction-list {
+    padding: 10px;
+    margin: 15px 0;
+  }
+}
+
+/* Small mobile screens */
+@media (max-width: 480px) {
+  .college-info h1 {
+    font-size: 0.7rem;
+  }
+  
+  .nba-logo {
+    max-height: 25px;
+  }
+  
+  .camera-container {
+    aspect-ratio: 2/3; /* More portrait for small mobile */
+    padding-bottom: 110%; /* Reduced from original 140% */
+    max-height: 200px;
+    margin: 10px 0 25px 0;
+  }
+  
+  .section-description {
+    font-size: 0.8rem;
+  }
+  
+  #instruction {
+    font-size: 0.8rem;
+    padding: 6px;
+  }
+}
+
+/* Make modal scrollable on small screens */
+@media (max-height: 600px) {
+  .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+    margin: 10px auto;
+  }
+  
+  .recording-steps {
+    margin: 10px 0;
+    padding: 8px;
+  }
+  
+  .recording-steps .step {
+    padding: 6px;
+    font-size: 0.85rem;
+  }
+  
+  .modal-content button.btn {
+    margin-top: 15px;
+    min-height: 55px;
+  }
+}
+
+/* Fix for buttons on very small screens */
+@media (max-width: 320px) {
+  .btn {
+    font-size: 0.8rem;
+    padding: 0.6rem 1rem;
+  }
+  
+  #startRecord {
+    font-size: 0.8rem;
+  }
+  
+  .college-info h1 {
+    font-size: 0.6rem;
+  }
 }
