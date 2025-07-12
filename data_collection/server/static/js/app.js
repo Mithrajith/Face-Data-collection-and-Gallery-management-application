@@ -538,7 +538,7 @@ async function uploadVideo(blob) {
                 statusDiv.style.color = 'red';
                 return;
             }
-            statusDiv.textContent = 'Processing videos...';
+            
             statusDiv.style.color = '#333';
             try {
                 const response = await fetch('/api/process-videos', {

@@ -160,6 +160,16 @@ def migrate_student_data():
     else:
         print("No student directories found that need migration")
 
+def get_department_id(name: str):
+    data = get_batch_years_and_departments()
+    departments = data['departments']
+    
+    for department in departments:
+        if department["name"] == name:
+            return department["id"]
+    
+    return None
+
 # Routes
 @app.route('/')
 def index():
@@ -186,30 +196,36 @@ def start_session():
     student_id = data.get('studentId')  # Registration Number
     name = data.get('name')  # Full Name
     year = data.get('year')
-    dept = data.get('dept')
+    dept_name = data.get('dept')
     
-    if not all([student_id, year, dept]):
+    if not all([student_id, year, dept_name]):
         return jsonify({"error": "Student ID, year, and department are required"}), 400
+    
+    # Get department ID from name
+    dept_id = get_department_id(dept_name)
+    if not dept_id:
+        return jsonify({"error": f"Invalid department name: {dept_name}"}), 400
     
     # Create unique session ID
     session_id = str(uuid.uuid4())
     
-    # Create department-year directory structure
-    dept_year_dir = os.path.join(DATA_DIR, f"{dept}_{year}")
+    # Use department ID for directory structure
+    dept_year_dir = os.path.join(DATA_DIR, f"{dept_id}_{year}")
     os.makedirs(dept_year_dir, exist_ok=True)
     
     # Create student directory within department-year folder
     student_dir = os.path.join(dept_year_dir, student_id)
     os.makedirs(student_dir, exist_ok=True)
     
-    # Create session info
+    # Create session info - store both ID and name
     session_data = {
         "sessionId": session_id,
         "regNo": student_id,
-        "name": name,  # Save name in session JSON
+        "name": name,
         "year": year,
-        "dept": dept,
-        "batch": f"Batch{year}",  # Create batch from year
+        "dept": dept_name,
+        "dept_id": dept_id,  # Store the department ID
+        "batch": f"Batch{year}",
         "startTime": datetime.now().isoformat(),
         "videoUploaded": False,
         "facesExtracted": False,
@@ -231,15 +247,19 @@ def upload_video(session_id):
     
     file = request.files['video']
     student_id = request.form.get('studentId')
-    name = request.form.get('name')  # Accept name from form
+    name = request.form.get('name')
     year = request.form.get('year')
-    dept = request.form.get('dept')
+    dept_name = request.form.get('dept')
     
     if not student_id:
         return jsonify({"error": "Registration Number is required"}), 400
     
-    # Create department-year directory structure
-    dept_year_dir = os.path.join(DATA_DIR, f"{dept}_{year}")
+    dept_id = get_department_id(dept_name)
+    if not dept_id:
+        return jsonify({"error": f"Invalid department name: {dept_name}"}), 400
+    
+    # Use department ID for directory structure
+    dept_year_dir = os.path.join(DATA_DIR, f"{dept_id}_{year}")
     os.makedirs(dept_year_dir, exist_ok=True)
     
     # Create student directory within department-year folder
@@ -421,8 +441,8 @@ def upload_video(session_id):
         #     session_data["name"] = name
         if year:
             session_data["year"] = year
-        if dept:
-            session_data["dept"] = dept
+        if dept_id:
+            session_data["dept"] = dept_id
         
         # Save updated session data with student reg number as filename only
         student_json_file = os.path.join(student_dir, f"{student_id}.json")
@@ -506,21 +526,26 @@ def reset_faces(session_id):
     data = request.json if request.json else {}
     student_id = data.get('studentId')
     year = data.get('year')
-    dept = data.get('dept')
+    dept_name = data.get('dept')
     
     if not student_id:
         return jsonify({"error": "Student ID is required"}), 400
     if not year:
         return jsonify({"error": "Year is required"}), 400
-    if not dept:
+    if not dept_name:
         return jsonify({"error": "Department is required"}), 400
     
-    # Get path to gallery directory using dept_year structure instead of faces directory
-    dept_year_dir = os.path.join(DATA_DIR, f"{dept}_{year}")
+    # Get department ID from name
+    dept_id = get_department_id(dept_name)
+    if not dept_id:
+        return jsonify({"error": f"Invalid department name: {dept_name}"}), 400
+    
+    # Use department ID for directory structure
+    dept_year_dir = os.path.join(DATA_DIR, f"{dept_id}_{year}")
     student_dir = os.path.join(dept_year_dir, student_id)
     
     # Also check gallery directory for cleanup
-    gallery_dept_year_dir = os.path.join(GALLERY_DIR, f"{dept}_{year}")
+    gallery_dept_year_dir = os.path.join(GALLERY_DIR, f"{dept_id}_{year}")
     gallery_student_dir = os.path.join(gallery_dept_year_dir, student_id)
     
     # Reset both data collection faces and gallery faces if they exist
@@ -702,10 +727,10 @@ if __name__ == '__main__':
     migrate_student_data()
 
     # Check if SSL certificates exist
-    cert_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'cert.pem')
-    key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'key.pem')
+    # cert_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'cert.pem')
+    # key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'key.pem')
     
-    if os.path.exists(cert_file) and os.path.exists(key_file):
+    if False and os.path.exists(cert_file) and os.path.exists(key_file):
         # Run with HTTPS
         print(f"🔐 Starting HTTPS server on {host}:{port}")
         print(f"📜 Using certificate: {cert_file}")
