@@ -261,16 +261,15 @@ def create_app() -> FastAPI:
         if year not in database.get_batch_years():
             raise HTTPException(status_code=400, detail=f"Invalid batch year: {year}")
 
-        # Build folder name as <deptname>_<year>
-        folder_name = f"{department_name}_{year}"
-        data_path = os.path.join(STUDENT_DATA_DIR, folder_name)
+        # Use the standardized path functions
+        data_path = get_data_path(year, department_id)
         gallery_path = get_gallery_path(year, department_id)
 
         print(f"Looking for data in: {data_path}")
         print(f"Gallery will be created at: {gallery_path}")
 
         if not os.path.exists(data_path):
-            raise HTTPException(status_code=400, detail=f"No face data found for {department_name} {year}. Please process videos first. Expected path: {data_path}")
+            raise HTTPException(status_code=400, detail=f"No face data found for {department_name} (ID: {department_id}) {year}. Please process videos first. Expected path: {data_path}")
 
         try:
             # Create gallery
