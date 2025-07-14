@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = 'auto';
+    
     // Student login enforcement
     if (!localStorage.getItem('studentRegNo')) {
         fetch('/api/check-login', {
