@@ -298,7 +298,7 @@ async function initCamera(autoStart = false) {
 
   } catch (error) {
     console.error('Error accessing camera:', error);
-    alert('Failed to access camera. Please try accessing this site via localhost.');
+    alert('Failed to access camera.');
     handleRestart();
   }
 }

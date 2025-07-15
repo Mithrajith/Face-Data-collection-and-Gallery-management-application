@@ -22,7 +22,8 @@ load_dotenv()
 
 # Get host, port, and workers from environment variables or use defaults
 host = os.environ.get("DATA_COLLECTION_HOST", "0.0.0.0")
-port = int(os.environ.get("DATA_COLLECTION_PORT", 8001))
+print(f"Data PORT : ", os.environ.get("DATA_COLLECTION_PORT", 8001))
+port = 8000 # int(os.environ.get("DATA_COLLECTION_PORT", 8001))
 workers = int(os.environ.get("DATA_COLLECTION_WORKERS", "1").strip().split()[0])
 
 app = Flask(__name__, static_folder='static')
@@ -628,12 +629,10 @@ def generate_qr():
             <img src="data:image/png;base64,{img_str}">
             <p>Protocol: <strong>{protocol_info}</strong></p>
             <p>Primary URL: <a href="{url}">{url}</a></p>
-            <p><small>Alternative: <a href="{alt_url}">{alt_url}</a></small></p>
             <br>
             <div style="background: #f0f0f0; padding: 15px; border-radius: 8px; max-width: 400px; margin: 0 auto;">
                 <h3>📱 Mobile Setup Instructions:</h3>
                 <ol style="text-align: left;">
-                    <li>Connect your phone to the same WiFi network</li>
                     <li>Scan the QR code or visit the URL above</li>
                     <li>If using HTTPS, accept the security warning</li>
                     <li>Allow camera permissions when prompted</li>
@@ -727,8 +726,8 @@ if __name__ == '__main__':
     migrate_student_data()
 
     # Check if SSL certificates exist
-    # cert_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'cert.pem')
-    # key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'key.pem')
+    cert_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'cert.pem')
+    key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'key.pem')
     
     if False and os.path.exists(cert_file) and os.path.exists(key_file):
         # Run with HTTPS
@@ -744,6 +743,7 @@ if __name__ == '__main__':
             f"--keyfile={key_file}"
         ]
     else:
+        port=8000
         # Run with HTTP (fallback)
         print(f"⚠️  SSL certificates not found. Starting HTTP server on {host}:{port}")
         print(f"💡 To enable HTTPS, run: ./generate_ssl_certs.sh")

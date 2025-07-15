@@ -36,9 +36,9 @@ if [ -f "../../.env" ]; then
 fi
 
 # Default values
-HOST=${DATA_COLLECTION_HOST:-0.0.0.0}
-PORT=${DATA_COLLECTION_PORT:-5001}
-WORKERS=${DATA_COLLECTION_WORKERS:-1}
+# HOST=${DATA_COLLECTION_HOST:-0.0.0.0}
+# PORT=${DATA_COLLECTION_PORT:-5001}
+# WORKERS=${DATA_COLLECTION_WORKERS:-1}
 
 # Locate PM2
 if [ -n "$PM2_EXECUTABLE" ]; then
@@ -59,8 +59,8 @@ if [ -z "$PM2_CMD" ]; then
 fi
 
 # Stop previous instance
-$PM2_CMD delete "data-collection-app" 2>/dev/null || true
-sleep 2
+# $PM2_CMD delete "data-collection-app" 2>/dev/null || true
+# sleep 2
 
 # Check if port is free
 MAX_RETRIES=10
@@ -93,11 +93,11 @@ EOF
 
 # Start app
 DATA_COLLECTION_HOST=$HOST DATA_COLLECTION_PORT=$PORT \
-$PM2_CMD start server/app.py --name "data-collection-app" --interpreter python3
+$PM2_CMD start server/app.py --name "data-collection-app-copy" --interpreter python3
 
 # Confirm
 sleep 2
-if $PM2_CMD describe "data-collection-app" > /dev/null 2>&1; then
+if $PM2_CMD describe "data-collection-app-copy" > /dev/null 2>&1; then
     echo "✅ Data Collection App started successfully"
 else
     echo "❌ Failed to start Data Collection App"

@@ -13,7 +13,7 @@ mkdir -p "$CERT_DIR"
 
 # Certificate configuration
 DOMAIN="localhost"
-IP="127.0.0.1"
+IP="172.16.3.110" # "127.0.0.1"
 COUNTRY="IN"
 STATE="Karnataka"
 CITY="Bangalore"
