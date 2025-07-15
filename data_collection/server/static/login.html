@@ -123,7 +123,7 @@
     }
 
     .disclaimer-content {
-      max-height: 150px;
+      max-height: 120px;
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: #ffc107 #fff8e1;
@@ -415,13 +415,38 @@
         margin-bottom: 10px;
       }
       
-      /* Ensure login button is visible */
+      /* Ensure login button is visible and page is scrollable */
       .container {
         padding-bottom: 20px !important;
+        min-height: auto !important;
+        height: auto !important;
       }
       
       .section {
         padding-bottom: 1rem !important;
+      }
+      
+      body {
+        overflow-y: auto !important;
+        min-height: 100vh;
+      }
+      
+      /* Ensure footer sticks to bottom but allows scrolling */
+      html, body {
+        height: auto;
+        min-height: 100vh;
+      }
+      
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
     }
   </style>
@@ -562,30 +587,27 @@
   
   // Enhanced layout adjustment for better responsive experience
   function optimizeLayout() {
-    // Disable scrolling on body
-    document.body.style.overflow = 'hidden';
+    // Enable scrolling on body for full page scroll
+    document.body.style.overflow = 'auto';
     
     const container = document.querySelector('.container');
     const header = document.querySelector('.header');
     const footer = document.querySelector('.footer');
     
     if (container && header && footer) {
-      // Calculate available height
-      const headerHeight = header.offsetHeight;
-      const footerHeight = footer.offsetHeight;
-      const windowHeight = window.innerHeight;
-      const availableHeight = windowHeight - headerHeight - footerHeight;
+      // Remove fixed height constraints to allow natural scrolling
+      container.style.height = 'auto';
+      container.style.overflow = 'visible';
       
-      // Apply calculated height to container
-      container.style.height = `${availableHeight}px`;
-      container.style.overflow = 'auto';
+      // Add minimum height to ensure proper spacing
+      container.style.minHeight = 'calc(100vh - 200px)';
       
       // Apply CSS vars for consistent spacing
       document.documentElement.style.setProperty(
-        '--header-height', `${headerHeight}px`
+        '--header-height', `${header.offsetHeight}px`
       );
       document.documentElement.style.setProperty(
-        '--footer-height', `${footerHeight}px`
+        '--footer-height', `${footer.offsetHeight}px`
       );
 
       // Dynamically adjust width based on screen resolution
