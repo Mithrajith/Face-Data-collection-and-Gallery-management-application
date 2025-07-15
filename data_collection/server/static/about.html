@@ -11,10 +11,102 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    <link favicon rel="icon" href="static/images/about.png" type="image/x-icon">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/images/css/style.css">
+    
+    <!-- Toast Notifications CSS -->
+    <link rel="stylesheet" href="/static/images/css/toast.css">
+    <link favicon rel="icon" href="/static/images/about.png" type="image/x-icon">
 
     <!-- About Page Specific CSS -->
     <style>
+
+
+        .header {
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px solid #eaeaea;
+            background-color: #f8f9fa;
+            margin-bottom: 20px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            gap: 30px;
+        }
+
+        .nba {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nba-logo {
+            height: 80px;
+            width: auto;
+            transition: transform 0.2s ease;
+        }
+
+        .nba-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .college-info {
+            text-align: center;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .college-info h1 {
+            font-size: 24px;
+            color: #006400;
+            margin: 0;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            letter-spacing: 1px;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nba-logo {
+                height: 60px;
+            }
+            
+            .college-info h1 {
+                font-size: 18px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .nba-logo {
+                height: 50px;
+            }
+            
+            .college-info h1 {
+                font-size: 16px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+        }
+
         .about-hero {
             background: #fff;
             padding: 80px 0;
@@ -149,60 +241,33 @@
             background-color: #0b5ed7;
             transform: scale(1.1);
         }
-        
-        /* Fixed/Sticky Footer Styles */
-        .fixed-footer {
-            transition: all 0.3s ease;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.08);
-        }
-        
-        /* Adjust back-to-home button to not overlap with footer */
-        .back-to-home {
-            bottom: 90px;
-        }
-        
-        /* Mobile responsiveness for sticky footer */
-        @media (max-width: 767px) {
-            .fixed-footer {
-                padding: 15px 5px;
-                width: 100%;
-                left: 0;
-                transform: none;
-                border-radius: 0;
-            }
-            
-            .fixed-footer h5 {
-                font-size: 1rem;
-            }
-            
-            .fixed-footer p {
-                font-size: 0.8rem;
-            }
-            
-            .fixed-footer .fa-2x {
-                font-size: 1.5rem;
-            }
-            
-            /* Make home button appear above footer but in different corner */
-            .back-to-home {
-                bottom: 80px;
-                right: 20px;
-            }
-        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom custom-navbar">
+    <!-- Enhanced Header Component -->
+    <header class="header">
+        <div class="header-container">
+            <div class="nba">
+                <img src="/static/images/image.png" class="nba-logo" alt="College Logo">
+            </div>
+            
+            <div class="college-info">
+                <h1>SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom custom-navbar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <i class="fas fa-user-circle me-2 text-primary fs-4"></i>
-                <span class="fw-bold text-primary">Face Data Collection</span>
+                <span class="fw-bold text-primary">Face Recognition Gallery</span>
             </a>
         </div>
-    </nav>
+    </nav> -->
 
     <!-- Hero Section -->
-    <section class="about-hero">
+    <!-- <section class="about-hero">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
@@ -217,10 +282,10 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Project Overview -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Project Overview</h2>
             <p class="text-muted">A modern approach to facial data collection and management</p>
@@ -260,10 +325,10 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Technologies Used -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Technologies Used</h2>
             <p class="text-muted">Cutting-edge technologies powering our application</p>
@@ -318,7 +383,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Team Section -->
     <section class="team-section">
@@ -367,8 +432,9 @@
                     </div>
                 </div>
                 <!-- Team Member 4 -->
-                <div class="col-md-4">
-                    <div class="team-member">
+<div class="row justify-content-center">
+                <div class="col-md-4" >
+                    <div class="team-member" >
                         <img src="/static/images/giri.png" alt="Team Member">
                         <h5>Giripriyan S</h5>
                         <p class="text-muted">Data collecter,Data Organizer</p>
@@ -378,13 +444,13 @@
                             <a href="mailto:giripriyan111@gmail.com"><i class="fas fa-envelope"></i></a>
                         </div>
                     </div>
-                </div>
+                </div></div>
             </div>
         </div>
     </section>
 
     <!-- Project Features -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Key Features</h2>
             <p class="text-muted">Comprehensive tools for face data management</p>
@@ -435,34 +501,34 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Contact Section -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="card border-0 bg-gradient shadow-sm" style="background-color: #f8f9fa; border-radius: 20px;">
             <div class="card-body p-5 text-center">
                 <h2 class="fw-bold mb-4">Get In Touch</h2>
                 <p class="mb-4">Have questions about our project or interested in similar technology? Feel free to reach out.</p>
             </div>
         </div>
-    </section>
+    </section> -->
 
-    <!-- Enhanced Fixed/Sticky Footer -->
-    <footer class="footer fixed-footer bg-gradient py-3" style="height: 10px; bottom: 0; left: 0; width: 100%; background-color: white; border-top: 1px solid rgba(0,0,0,0.05);">
+    <!-- Enhanced Footer -->
+    <footer class="footer bg-gradient mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid rgba(0,0,0,0.05);">
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-md-4 mb-2 mb-md-0">
-                    <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex align-items-center">
                         <i class="fas fa-user-circle text-primary fa-2x me-3"></i>
                         <div>
-                            <h5 class="mb-0 fw-bold">Face Data Collection</h5>
+                            <h5 class="mb-0 fw-bold">Face Recognition</h5>
+                            <p class="mb-0 text-muted small">Gallery Manager</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-2 mb-md-0 text-center">
-                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill d-none d-md-inline-block"></span>
+                <div class="col-md-4 mb-3 mb-md-0 text-center">
                 </div>
-                <div class="col-md-4 text-center text-md-end">
+                <div class="col-md-4 text-md-end">
                     <p class="mb-0">
                         <span class="text-muted">Designed & Developed by</span>
                         <span class="fw-medium ms-1"><a href="/about" style="list-style: none;">AI & ML Students</a></span>
@@ -471,9 +537,6 @@
             </div>
         </div>
     </footer>
-    
-    <!-- Spacer for fixed footer -->
-    <div style="height: 70px;"></div>
 
     <!-- Back to Home Button -->
     <a href="/" class="back-to-home">

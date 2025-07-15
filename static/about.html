@@ -20,6 +20,93 @@
 
     <!-- About Page Specific CSS -->
     <style>
+
+
+        .header {
+            padding: 20px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px solid #eaeaea;
+            background-color: #f8f9fa;
+            margin-bottom: 20px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            gap: 30px;
+        }
+
+        .nba {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nba-logo {
+            height: 80px;
+            width: auto;
+            transition: transform 0.2s ease;
+        }
+
+        .nba-logo:hover {
+            transform: scale(1.05);
+        }
+
+        .college-info {
+            text-align: center;
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .college-info h1 {
+            font-size: 24px;
+            color: #006400;
+            margin: 0;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            letter-spacing: 1px;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nba-logo {
+                height: 60px;
+            }
+            
+            .college-info h1 {
+                font-size: 18px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .nba-logo {
+                height: 50px;
+            }
+            
+            .college-info h1 {
+                font-size: 16px;
+                white-space: normal;
+                word-wrap: break-word;
+            }
+        }
+
         .about-hero {
             background: #fff;
             padding: 80px 0;
@@ -170,17 +257,17 @@
         </div>
     </header>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom custom-navbar">
+    <!-- <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom custom-navbar">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <i class="fas fa-user-circle me-2 text-primary fs-4"></i>
                 <span class="fw-bold text-primary">Face Recognition Gallery</span>
             </a>
         </div>
-    </nav>
+    </nav> -->
 
     <!-- Hero Section -->
-    <section class="about-hero">
+    <!-- <section class="about-hero">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
@@ -195,10 +282,10 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Project Overview -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Project Overview</h2>
             <p class="text-muted">A modern approach to facial data collection and management</p>
@@ -238,10 +325,10 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Technologies Used -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Technologies Used</h2>
             <p class="text-muted">Cutting-edge technologies powering our application</p>
@@ -296,7 +383,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Team Section -->
     <section class="team-section">
@@ -345,8 +432,9 @@
                     </div>
                 </div>
                 <!-- Team Member 4 -->
-                <div class="col-md-4">
-                    <div class="team-member">
+<div class="row justify-content-center">
+                <div class="col-md-4" >
+                    <div class="team-member" >
                         <img src="/static/images/giri.png" alt="Team Member">
                         <h5>Giripriyan S</h5>
                         <p class="text-muted">Data collecter,Data Organizer</p>
@@ -356,13 +444,13 @@
                             <a href="mailto:giripriyan111@gmail.com"><i class="fas fa-envelope"></i></a>
                         </div>
                     </div>
-                </div>
+                </div></div>
             </div>
         </div>
     </section>
 
     <!-- Project Features -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="text-center mb-5">
             <h2 class="fw-bold">Key Features</h2>
             <p class="text-muted">Comprehensive tools for face data management</p>
@@ -413,17 +501,17 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Contact Section -->
-    <section class="container mb-5">
+    <!-- <section class="container mb-5">
         <div class="card border-0 bg-gradient shadow-sm" style="background-color: #f8f9fa; border-radius: 20px;">
             <div class="card-body p-5 text-center">
                 <h2 class="fw-bold mb-4">Get In Touch</h2>
                 <p class="mb-4">Have questions about our project or interested in similar technology? Feel free to reach out.</p>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Enhanced Footer -->
     <footer class="footer bg-gradient mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid rgba(0,0,0,0.05);">

@@ -74,6 +74,356 @@
         font-size: 1.1rem;
       }
     }
+
+    /* Enhanced Disclaimer Section */
+    .disclaimer-card {
+      background: linear-gradient(135deg, #fff8e1 0%, #f3e5ab 100%);
+      border: 2px solid #ffc107;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+      transition: all 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Green theme when checkbox is checked */
+    .disclaimer-card.checked {
+      background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+      border: 2px solid #4caf50;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .disclaimer-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #ffc107, #ff9800, #ffc107);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+      transition: all 0.5s ease;
+    }
+
+    .disclaimer-card.checked::before {
+      background: linear-gradient(90deg, #4caf50, #66bb6a, #4caf50);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .disclaimer-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+    }
+
+    .disclaimer-content {
+      max-height: 150px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #ffc107 #fff8e1;
+    }
+
+    .disclaimer-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .disclaimer-content::-webkit-scrollbar-track {
+      background: #fff8e1;
+      border-radius: 3px;
+    }
+
+    .disclaimer-content::-webkit-scrollbar-thumb {
+      background: #ffc107;
+      border-radius: 3px;
+    }
+
+    .disclaimer-content::-webkit-scrollbar-thumb:hover {
+      background: #ff9800;
+    }
+
+    .disclaimer-title {
+      color: #ff8f00;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .disclaimer-title i {
+      font-size: 1.2em;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .disclaimer-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 20px 0;
+    }
+
+    .disclaimer-list li {
+      position: relative;
+      padding: 8px 0 8px 25px;
+      margin-bottom: 8px;
+      color: #5d4037;
+      line-height: 1.5;
+      transition: all 0.2s ease;
+    }
+
+    .disclaimer-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 18px;
+      height: 18px;
+      background: #4caf50;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .disclaimer-list li:hover {
+      background: rgba(255, 193, 7, 0.1);
+      border-radius: 8px;
+      padding-left: 30px;
+    }
+
+    /* Custom Circular Checkbox */
+    .custom-checkbox {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      border: 2px solid #ffc107;
+      transition: all 0.5s ease;
+      cursor: pointer;
+    }
+
+    .custom-checkbox:hover {
+      background: rgba(255, 193, 7, 0.1);
+      transform: translateX(2px);
+    }
+
+    .custom-checkbox.checked {
+      background: rgba(76, 175, 80, 0.1);
+      border: 2px solid #4caf50;
+    }
+
+    .custom-checkbox.checked:hover {
+      background: rgba(76, 175, 80, 0.2);
+    }
+
+    .custom-checkbox input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .checkmark {
+      position: relative;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #ddd;
+      border-radius: 50%;
+      background: white;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .custom-checkbox input:checked ~ .checkmark {
+      background: #4caf50;
+      border-color: #4caf50;
+      animation: checkAnimation 0.3s ease;
+    }
+
+    @keyframes checkAnimation {
+      0% { transform: scale(0.8); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .checkmark::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: white;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.2s ease;
+    }
+
+    .custom-checkbox input:checked ~ .checkmark::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .checkbox-label {
+      font-weight: 600;
+      color: #3e2723;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      flex: 1;
+      transition: color 0.5s ease;
+    }
+
+    .custom-checkbox.checked .checkbox-label {
+      color: #2e7d32;
+    }
+
+    /* Enhanced login button styles */
+    .login-btn {
+      transition: all 0.5s ease;
+      background: linear-gradient(45deg, #6c757d, #495057);
+      border: none;
+      transform: scale(1);
+    }
+
+    .login-btn:disabled {
+      background: linear-gradient(45deg, #6c757d, #495057);
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .login-btn.enabled {
+      background: linear-gradient(45deg, #007bff, #0056b3);
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+      transform: scale(1.02);
+    }
+
+    .login-btn.enabled:hover {
+      background: linear-gradient(45deg, #0056b3, #004085);
+      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+      transform: scale(1.03);
+    }
+
+    /* Responsive adjustments for disclaimer */
+    @media (max-width: 768px) {
+      .disclaimer-content {
+        max-height: 120px;
+        font-size: 0.9rem;
+      }
+      
+      .disclaimer-list li {
+        padding: 4px 0 4px 20px;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
+      }
+      
+      .disclaimer-list li::before {
+        width: 14px;
+        height: 14px;
+        font-size: 10px;
+        top: 4px;
+      }
+      
+      .custom-checkbox {
+        padding: 10px;
+        gap: 8px;
+      }
+      
+      .checkmark {
+        width: 18px;
+        height: 18px;
+        border-width: 2px;
+      }
+      
+      .checkmark::after {
+        width: 5px;
+        height: 5px;
+      }
+      
+      .checkbox-label {
+        font-size: 0.85rem;
+        line-height: 1.3;
+      }
+      
+      .disclaimer-card {
+        margin-bottom: 1rem;
+      }
+      
+      .disclaimer-card .card-body {
+        padding: 1rem !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .disclaimer-content {
+        max-height: 100px;
+        font-size: 0.8rem;
+      }
+      
+      .disclaimer-list li {
+        padding: 3px 0 3px 18px;
+        font-size: 0.8rem;
+        margin-bottom: 3px;
+      }
+      
+      .disclaimer-list li::before {
+        width: 12px;
+        height: 12px;
+        font-size: 9px;
+        top: 3px;
+      }
+      
+      .custom-checkbox {
+        padding: 8px;
+        gap: 6px;
+      }
+      
+      .checkmark {
+        width: 16px;
+        height: 16px;
+      }
+      
+      .checkmark::after {
+        width: 4px;
+        height: 4px;
+      }
+      
+      .checkbox-label {
+        font-size: 0.8rem;
+        line-height: 1.2;
+      }
+      
+      .disclaimer-card .card-body {
+        padding: 0.75rem !important;
+      }
+      
+      .disclaimer-title {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+      
+      /* Ensure login button is visible */
+      .container {
+        padding-bottom: 20px !important;
+      }
+      
+      .section {
+        padding-bottom: 1rem !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -102,7 +452,39 @@
                 <label for="dob" class="form-label">Date of Birth</label>
                 <input type="date" class="form-control" id="dob" name="dob" required />
               </div>
-              <button type="submit" class="btn btn-primary w-100">
+              
+              <!-- Enhanced Disclaimer Section -->
+              <div class="mb-4">
+                <div class="disclaimer-card">
+                  <div class="card-body p-4">
+                    <h6 class="disclaimer-title">
+                      <i class="bi bi-shield-exclamation"></i>
+                      Data Usage & Privacy Agreement
+                    </h6>
+                    
+                    <div class="disclaimer-content">
+                      <p class="mb-3" style="color: #5d4037; font-weight: 500;">
+                        By proceeding, you agree that your facial data will be securely collected and used exclusively for attendance tracking purposes.
+                      </p>
+                      
+                      <ul class="disclaimer-list">
+                        <li>Facial data captured and stored securely for attendance tracking</li>
+                        <li>Data used exclusively for academic attendance management</li>
+                      </ul>
+                    </div>
+                    
+                    <label class="custom-checkbox">
+                      <input type="checkbox" id="dataConsent" name="dataConsent" required>
+                      <span class="checkmark"></span>
+                      <span class="checkbox-label">
+                        I agree to facial data collection for attendance tracking.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-100 login-btn" id="loginBtn" disabled>
                 <i class="bi bi-box-arrow-in-right"></i> Login
               </button>
             </form>
@@ -123,6 +505,61 @@
   <script src="/static/js/login.js"></script>
   
   <script>
+  // Disclaimer checkbox functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const dataConsentCheckbox = document.getElementById('dataConsent');
+    const loginBtn = document.getElementById('loginBtn');
+    const disclaimerCard = document.querySelector('.disclaimer-card');
+    const customCheckbox = document.querySelector('.custom-checkbox');
+    
+    // Function to toggle login button state and themes
+    function toggleLoginButton() {
+      if (dataConsentCheckbox.checked) {
+        // Enable button and change to blue theme
+        loginBtn.disabled = false;
+        loginBtn.classList.remove('btn-secondary');
+        loginBtn.classList.add('btn-primary', 'enabled');
+        
+        // Change container to green theme
+        disclaimerCard.classList.add('checked');
+        customCheckbox.classList.add('checked');
+        
+        // Add success animation
+        disclaimerCard.style.transform = 'scale(1.02)';
+        setTimeout(() => {
+          disclaimerCard.style.transform = 'scale(1)';
+        }, 300);
+        
+      } else {
+        // Disable button and revert to default theme
+        loginBtn.disabled = true;
+        loginBtn.classList.remove('btn-primary', 'enabled');
+        loginBtn.classList.add('btn-secondary');
+        
+        // Revert container to yellow theme
+        disclaimerCard.classList.remove('checked');
+        customCheckbox.classList.remove('checked');
+      }
+    }
+    
+    // Initial state
+    toggleLoginButton();
+    
+    // Listen for checkbox changes
+    dataConsentCheckbox.addEventListener('change', function() {
+      // Add click animation to checkbox
+      const checkmark = document.querySelector('.checkmark');
+      if (this.checked) {
+        checkmark.style.transform = 'scale(1.2)';
+        setTimeout(() => {
+          checkmark.style.transform = 'scale(1)';
+        }, 200);
+      }
+      
+      toggleLoginButton();
+    });
+  });
+  
   // Enhanced layout adjustment for better responsive experience
   function optimizeLayout() {
     // Disable scrolling on body
