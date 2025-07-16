@@ -14,7 +14,7 @@ PORT = int(os.environ.get("GALLERY_MANAGER_PORT", 8000))
 WORKERS = int(os.environ.get("GALLERY_MANAGER_WORKERS", 1))
 
 COLLECTION_APP_HOST = os.environ.get("DATA_COLLECTION_HOST", "localhost")
-COLLECTION_APP_PORT = int(os.environ.get("DATA_COLLECTION_PORT", 5001))
+COLLECTION_APP_PORT = 8000 # int(os.environ.get("DATA_COLLECTION_PORT", 5001))
 
 # Default paths using relative paths
 DEFAULT_MODEL_PATH = os.path.join(BASE_DIR, "src", "checkpoints", "LightCNN_29Layers_V2_checkpoint.pth.tar")

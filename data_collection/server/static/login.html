@@ -536,7 +536,7 @@
     const loginBtn = document.getElementById('loginBtn');
     const disclaimerCard = document.querySelector('.disclaimer-card');
     const customCheckbox = document.querySelector('.custom-checkbox');
-    
+
     // Function to toggle login button state and themes
     function toggleLoginButton() {
       if (dataConsentCheckbox.checked) {
@@ -544,32 +544,32 @@
         loginBtn.disabled = false;
         loginBtn.classList.remove('btn-secondary');
         loginBtn.classList.add('btn-primary', 'enabled');
-        
+
         // Change container to green theme
         disclaimerCard.classList.add('checked');
         customCheckbox.classList.add('checked');
-        
+
         // Add success animation
         disclaimerCard.style.transform = 'scale(1.02)';
         setTimeout(() => {
           disclaimerCard.style.transform = 'scale(1)';
         }, 300);
-        
+
       } else {
         // Disable button and revert to default theme
         loginBtn.disabled = true;
         loginBtn.classList.remove('btn-primary', 'enabled');
         loginBtn.classList.add('btn-secondary');
-        
+
         // Revert container to yellow theme
         disclaimerCard.classList.remove('checked');
         customCheckbox.classList.remove('checked');
       }
     }
-    
+
     // Initial state
     toggleLoginButton();
-    
+
     // Listen for checkbox changes
     dataConsentCheckbox.addEventListener('change', function() {
       // Add click animation to checkbox
@@ -580,107 +580,109 @@
           checkmark.style.transform = 'scale(1)';
         }, 200);
       }
-      
+
       toggleLoginButton();
     });
   });
+  // Remove body overflow:hidden and container fixed height for scrollable login page
+  // Remove optimizeLayout and related event listeners
   
-  // Enhanced layout adjustment for better responsive experience
-  function optimizeLayout() {
-    // Enable scrolling on body for full page scroll
-    document.body.style.overflow = 'auto';
+  // // Enhanced layout adjustment for better responsive experience
+  // function optimizeLayout() {
+  //   // Enable scrolling on body for full page scroll
+  //   document.body.style.overflow = 'auto';
     
-    const container = document.querySelector('.container');
-    const header = document.querySelector('.header');
-    const footer = document.querySelector('.footer');
+  //   const container = document.querySelector('.container');
+  //   const header = document.querySelector('.header');
+  //   const footer = document.querySelector('.footer');
     
-    if (container && header && footer) {
-      // Remove fixed height constraints to allow natural scrolling
-      container.style.height = 'auto';
-      container.style.overflow = 'visible';
+  //   if (container && header && footer) {
+  //     // Remove fixed height constraints to allow natural scrolling
+  //     container.style.height = 'auto';
+  //     container.style.overflow = 'visible';
       
-      // Add minimum height to ensure proper spacing
-      container.style.minHeight = 'calc(100vh - 200px)';
+  //     // Add minimum height to ensure proper spacing
+  //     container.style.minHeight = 'calc(100vh - 200px)';
       
-      // Apply CSS vars for consistent spacing
-      document.documentElement.style.setProperty(
-        '--header-height', `${header.offsetHeight}px`
-      );
-      document.documentElement.style.setProperty(
-        '--footer-height', `${footer.offsetHeight}px`
-      );
+  //     // Apply CSS vars for consistent spacing
+  //     document.documentElement.style.setProperty(
+  //       '--header-height', `${header.offsetHeight}px`
+  //     );
+  //     document.documentElement.style.setProperty(
+  //       '--footer-height', `${footer.offsetHeight}px`
+  //     );
 
-      // Dynamically adjust width based on screen resolution
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      let containerWidth;
+  //     // Dynamically adjust width based on screen resolution
+  //     const screenWidth = window.innerWidth;
+  //     const screenHeight = window.innerHeight;
+  //     let containerWidth;
       
-      // Calculate aspect ratio - useful for adapting to different devices
-      const aspectRatio = screenWidth / screenHeight;
+  //     // Calculate aspect ratio - useful for adapting to different devices
+  //     const aspectRatio = screenWidth / screenHeight;
       
-      // Adjust container width based on device type and screen dimensions
-      if (screenWidth >= 1600) {
-        // Extra large screens
-        containerWidth = Math.min(screenWidth * 0.6, 1400);
-      } else if (screenWidth >= 1200) {
-        // Large desktop screens
-        containerWidth = Math.min(screenWidth * 0.7, 1200);
-      } else if (screenWidth >= 768) {
-        // Medium screens (tablets, small desktops)
-        containerWidth = Math.min(screenWidth * 0.8, 1000);
-      } else if (screenWidth >= 480) {
-        // Mobile landscape
-        containerWidth = Math.min(screenWidth * 0.9, 800);
-      } else {
-        // Small mobile screens
-        containerWidth = screenWidth * 0.95;
-      }
+  //     // Adjust container width based on device type and screen dimensions
+  //     if (screenWidth >= 1600) {
+  //       // Extra large screens
+  //       containerWidth = Math.min(screenWidth * 0.6, 1400);
+  //     } else if (screenWidth >= 1200) {
+  //       // Large desktop screens
+  //       containerWidth = Math.min(screenWidth * 0.7, 1200);
+  //     } else if (screenWidth >= 768) {
+  //       // Medium screens (tablets, small desktops)
+  //       containerWidth = Math.min(screenWidth * 0.8, 1000);
+  //     } else if (screenWidth >= 480) {
+  //       // Mobile landscape
+  //       containerWidth = Math.min(screenWidth * 0.9, 800);
+  //     } else {
+  //       // Small mobile screens
+  //       containerWidth = screenWidth * 0.95;
+  //     }
       
-      // Additional adjustment for unusual aspect ratios
-      if (aspectRatio > 2) { // Ultrawide monitors
-        containerWidth = Math.min(containerWidth, screenWidth * 0.5);
-      } else if (aspectRatio < 0.6) { // Very tall screens
-        containerWidth = Math.min(containerWidth, screenWidth * 0.95);
-      }
+  //     // Additional adjustment for unusual aspect ratios
+  //     if (aspectRatio > 2) { // Ultrawide monitors
+  //       containerWidth = Math.min(containerWidth, screenWidth * 0.5);
+  //     } else if (aspectRatio < 0.6) { // Very tall screens
+  //       containerWidth = Math.min(containerWidth, screenWidth * 0.95);
+  //     }
 
-      // Apply the calculated width
-      container.style.maxWidth = `${containerWidth}px`;
+  //     // Apply the calculated width
+  //     container.style.maxWidth = `${containerWidth}px`;
       
-      // Scale form elements based on screen size
-      if (screenWidth >= 1200) {
-        // Adjust login form for larger screens
-        const inputs = document.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-          if (screenWidth >= 1600) {
-            input.style.padding = '0.8rem 1.2rem';
-            input.style.fontSize = '1.1rem';
-          } else {
-            input.style.padding = '0.7rem 1rem';
-            input.style.fontSize = '1.05rem';
-          }
-        });
-      }
+  //     // Scale form elements based on screen size
+  //     if (screenWidth >= 1200) {
+  //       // Adjust login form for larger screens
+  //       const inputs = document.querySelectorAll('.form-control');
+  //       inputs.forEach(input => {
+  //         if (screenWidth >= 1600) {
+  //           input.style.padding = '0.8rem 1.2rem';
+  //           input.style.fontSize = '1.1rem';
+  //         } else {
+  //           input.style.padding = '0.7rem 1rem';
+  //           input.style.fontSize = '1.05rem';
+  //         }
+  //       });
+  //     }
       
-      // Adjust section padding based on screen size
-      const sections = document.querySelectorAll('.section');
-      if (sections.length > 0) {
-        let padding;
-        if (screenWidth < 480) {
-          padding = '1.25rem';
-        } else if (screenWidth < 768) {
-          padding = '1.5rem';
-        } else if (screenWidth < 1200) {
-          padding = '2rem';
-        } else {
-          padding = '2.5rem';
-        }
+  //     // Adjust section padding based on screen size
+  //     const sections = document.querySelectorAll('.section');
+  //     if (sections.length > 0) {
+  //       let padding;
+  //       if (screenWidth < 480) {
+  //         padding = '1.25rem';
+  //       } else if (screenWidth < 768) {
+  //         padding = '1.5rem';
+  //       } else if (screenWidth < 1200) {
+  //         padding = '2rem';
+  //       } else {
+  //         padding = '2.5rem';
+  //       }
         
-        sections.forEach(section => {
-          section.style.padding = padding;
-        });
-      }
-    }
-  }
+  //       sections.forEach(section => {
+  //         section.style.padding = padding;
+  //       });
+  //     }
+  //   }
+  // }
   
   // Run on load and resize
   window.addEventListener('DOMContentLoaded', optimizeLayout);

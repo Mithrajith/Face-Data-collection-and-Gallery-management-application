@@ -436,14 +436,14 @@ def upload_video(session_id):
         session_data["facesOrganized"] = False  # Will be set to True when organized in gallery manager
         session_data["facesCount"] = 0  # Will be updated during processing
         session_data["videoPath"] = mp4_path  # Store video path for reference
-        
+        session_data["dept"] = dept_name
         # Update additional fields if provided in form data
         # if name:
         #     session_data["name"] = name
         if year:
             session_data["year"] = year
         if dept_id:
-            session_data["dept"] = dept_id
+            session_data["dept_id"] = dept_id
         
         # Save updated session data with student reg number as filename only
         student_json_file = os.path.join(student_dir, f"{student_id}.json")
@@ -729,7 +729,7 @@ if __name__ == '__main__':
     cert_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'cert.pem')
     key_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'certs', 'key.pem')
     
-    if False and os.path.exists(cert_file) and os.path.exists(key_file):
+    if os.path.exists(cert_file) and os.path.exists(key_file):
         # Run with HTTPS
         print(f"🔐 Starting HTTPS server on {host}:{port}")
         print(f"📜 Using certificate: {cert_file}")
@@ -743,7 +743,7 @@ if __name__ == '__main__':
             f"--keyfile={key_file}"
         ]
     else:
-        port=8000
+        # port=8000
         # Run with HTTP (fallback)
         print(f"⚠️  SSL certificates not found. Starting HTTP server on {host}:{port}")
         print(f"💡 To enable HTTPS, run: ./generate_ssl_certs.sh")

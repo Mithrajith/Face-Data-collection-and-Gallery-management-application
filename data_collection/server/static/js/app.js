@@ -20,23 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     // Check for secure context
-    if (!navigator.mediaDevices) {
-        // Create error message
-        const errorSection = document.createElement('div');
-        errorSection.className = 'section error-section';
-        errorSection.innerHTML = `
-            <h2>Camera API Not Available</h2>
-            <p>This browser doesn't support camera access from this URL.</p>
-            <p>Please try one of the following:</p>
-            <ul>
-                <li>Give this site access to your camera</li>
-                <li>Use Chrome or Firefox</li>
-                <li>Enable HTTPS for this application</li>
-            </ul>
-        `;
+    // if (!navigator.mediaDevices) {
+    //     // Create error message
+    //     const errorSection = document.createElement('div');
+    //     errorSection.className = 'section error-section';
+    //     errorSection.innerHTML = `
+    //         <h2>Camera API Not Available</h2>
+    //         <p>This browser doesn't support camera access from this URL.</p>
+    //         <p>Please try one of the following:</p>
+    //         <ul>
+    //             <li>Give this site access to your camera</li>
+    //             <li>Use Chrome or Firefox</li>
+    //             <li>Enable HTTPS for this application</li>
+    //         </ul>
+    //     `;
         
-        document.querySelector('.container').prepend(errorSection);
-    }
+    //     document.querySelector('.container').prepend(errorSection);
+    // }
     
     // Initialize elements that might be missing
     const ensureInstructionElement = () => {
