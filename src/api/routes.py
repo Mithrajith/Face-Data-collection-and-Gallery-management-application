@@ -86,6 +86,48 @@ def create_app() -> FastAPI:
     async def about():
         return FileResponse(os.path.join("static", "about.html"))
 
+    @app.get("/static/css/toast", response_class=FileResponse)
+    async def serve_style_1():
+        """Serve the process video page"""
+        return FileResponse(os.path.join("static","css","toast.css"))
+
+
+    @app.get("/static/css/style", response_class=FileResponse)
+    async def serve_style_2():
+        """Serve the process video page"""
+        return FileResponse(os.path.join("static","css","style.css"))
+
+    @app.get("/home", response_class=FileResponse)
+    async def serve_home():
+        """Serve the process video page"""
+        return FileResponse(os.path.join("static", "index.html"))
+
+    # Split page routes
+    @app.get("/process_video", response_class=FileResponse)
+    async def serve_process_video():
+        """Serve the process video page"""
+        return FileResponse(os.path.join("static", "process_video.html"))
+
+    @app.get("/create_gallery", response_class=FileResponse)
+    async def serve_create_gallery():
+        """Serve the create gallery page"""
+        return FileResponse(os.path.join("static", "create_gallery.html"))
+
+    @app.get("/view_gallery", response_class=FileResponse)
+    async def serve_view_gallery():
+        """Serve the view gallery page"""
+        return FileResponse(os.path.join("static", "view_gallery.html"))
+
+    @app.get("/face_reg", response_class=FileResponse)
+    async def serve_face_recognition():
+        """Serve the face recognition page"""
+        return FileResponse(os.path.join("static", "face_reg.html"))
+
+    @app.get("/admin", response_class=FileResponse)
+    async def serve_admin():
+        """Serve the admin page"""
+        return FileResponse(os.path.join("static", "admin.html"))
+
     @app.get("/batches", summary="Get available batch years and departments")
     async def get_batches():
         """Get available batch years and departments."""

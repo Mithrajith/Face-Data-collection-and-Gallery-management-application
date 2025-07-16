@@ -47,7 +47,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="/">
+                        <a class="nav-link" href="/">
                             <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
@@ -71,7 +71,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="/face_reg">
+                        <a class="nav-link active" href="/face_reg">
                             <i class="fas fa-user-check me-1"></i> Face Recognition
                         </a>
                     </li>
@@ -83,82 +83,96 @@
                     </li>
                 </ul>
             </div>
-        </div>
-    </nav>
-
+        </div>    </nav>
 
     <!-- Main Content -->
+    <div class="bg-light p-5 rounded shadow-sm">
     <div class="container py-4">
-        <!-- Home Section -->
-            <div class="bg-light p-5 rounded shadow-sm">
-                <h1 class="display-4 fw-bold text-primary mb-3">Face Recognition Gallery Manager</h1>
-                <p class="lead">Create and manage face recognition galleries for students by batch and department.</p>
-                <hr class="my-4">
-                <p class="mb-4">This application helps you process videos to create face galleries and perform accurate face recognition for student identification.</p>
-
-                <div class="row g-4 mt-4">
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
-                            <div class="card-body">
-                                <div class="icon-circle bg-primary-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-video fa-2x text-primary"></i>
-                                </div>
-                                <h5 class="card-title fw-bold">Process Videos</h5>
-                                <p class="card-text">Extract faces from videos and prepare for gallery creation.</p>
-                                <a href="/process_video" class="btn btn-primary mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>Get Started
-                                </a>
-                            </div>
+        <!-- Face Recognition Section -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="feature-icon bg-white text-danger rounded-circle p-3 me-3">
+                            <i class="fas fa-user-check fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1">Face Recognition</h4>
+                            <p class="mb-0 opacity-75"><i class="fas fa-info-circle me-1"></i> Identify faces using trained galleries</p>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
-                            <div class="card-body">
-                                <div class="icon-circle bg-success-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-database fa-2x text-success"></i>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 mb-4">
+                                <div class="card-header bg-light border-0 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-upload text-danger fa-lg me-2"></i>
+                                        <h5 class="mb-0">Upload Image for Recognition</h5>
+                                    </div>
                                 </div>
-                                <h5 class="card-title fw-bold">Create Galleries</h5>
-                                <p class="card-text">Build face recognition galleries from processed data.</p>
-                                <a href="/create_gallery" class="btn btn-success mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>Start Building
-                                </a>
+                                <div class="card-body p-4">
+                                    <div class="mb-4">
+                                        <div class="image-preview mb-4 border rounded shadow-sm">
+                                            <img id="imagePreview" src="/static/img/placeholder.png" class="img-fluid" alt="Preview">
+                                        </div>
+                                        <label for="recognitionImage" class="form-label fw-bold"><i class="fas fa-file-image me-2"></i>Select Image</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="fas fa-camera"></i></span>
+                                            <input class="form-control form-control-lg" type="file" id="recognitionImage" accept="image/*">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <h5 class="mb-0 fw-bold"><i class="fas fa-layer-group me-2 text-danger"></i>Select Galleries</h5>
+                                        
+                                    </div>
+                                    <div class="mb-4 bg-light p-3 rounded" id="galleryCheckboxes">
+                                        <!-- Will be populated dynamically -->
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-danger" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2 text-muted">Loading available galleries...</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid">
+                                        <button id="btnRecognize" class="btn btn-danger btn-lg" disabled>
+                                            <i class="fas fa-search me-2"></i>Recognize Faces
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
-                            <div class="card-body">
-                                <div class="icon-circle bg-info-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-images fa-2x text-info"></i>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-light border-0 py-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-id-card text-danger fa-lg me-2"></i>
+                                        <h5 class="mb-0">Recognition Results</h5>
+                                    </div>
                                 </div>
-                                <h5 class="card-title fw-bold">View Galleries</h5>
-                                <p class="card-text">Browse and manage existing face recognition galleries.</p>
-                                <a href="/view_gallery" class="btn btn-info text-white mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>View Now
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
-                            <div class="card-body">
-                                <div class="icon-circle bg-danger-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-user-check fa-2x text-danger"></i>
+                                <div class="card-body p-4">
+                                    <div class="result-container text-center p-3 border rounded shadow-sm mb-4 bg-light">
+                                        <img id="resultImage" src="/static/img/placeholder.png" class="img-fluid" alt="Result">
+                                    </div>
+                                    <div id="recognitionResults" class="mt-4 p-3 rounded">
+                                        <!-- Will show results after recognition -->
+                                        <div class="text-center py-3 text-muted">
+                                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                            <p>Recognition results will appear here</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h5 class="card-title fw-bold">Face Recognition</h5>
-                                <p class="card-text">Upload an image to identify faces using your galleries.</p>
-                                <a href="/face_reg" class="btn btn-danger mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>Try It Now
-                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+  
 
- 
-    </div>
-    
     <!-- Enhanced Footer -->
     <footer class="footer bg-gradient mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid rgba(0,0,0,0.05);">
         <div class="container">
@@ -183,13 +197,14 @@
             </div>
         </div>
     </footer>
-    
+      </div>
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom JavaScript -->
+    <script src="/static/js/app.js?v=1.1"></script>
     <script>
-        // Simplified JavaScript for index.html - only logout functionality needed
+        // Attach logout functionality directly here to guarantee it works
         (function() {
             function handleLogout() {
                 localStorage.removeItem('userRole');

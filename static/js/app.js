@@ -74,57 +74,96 @@ function debounce(func, wait) {
 document.addEventListener('DOMContentLoaded', function() {
     // Add debug logging
     
-    // Navigation handling
-    document.querySelectorAll('.nav-link, button[data-section]').forEach(link => {
+    // Navigation handling - only for elements that actually have data-section attributes
+    document.querySelectorAll('button[data-section], a[data-section]').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const section = this.getAttribute('data-section');
-            activateSection(section);
-            
-            if (section === 'createGalleries') {
-                loadProcessedDatasets();
-            }
-            
-            // Load student data folders when upload section is activated
-            if (section === 'upload') {
-                loadStudentDataFolders();
-            }
-            
-            // Reload data when entering specific sections
-            if (section === 'recognition') {
-                console.log("Recognition section activated, reloading gallery checkboxes");
-                loadGalleryCheckboxes();
-            } else if (section === 'galleries') {
-                console.log("Galleries section activated, reloading galleries list");
-                loadGalleries();
-            } else if (section === 'createGalleries') {
-                console.log("Create Galleries section activated, loading processed datasets");
-                loadProcessedDatasets();
-            }
-            
-            if (section === 'recognition') {
-                console.log("Recognition section activated, reinitializing");
+            if (section) {  // Only activate if section is not null
+                activateSection(section);
                 
-                // Reload gallery checkboxes
-                loadGalleryCheckboxes();
-                
-                // Reinitialize event listeners
-                const recognitionImage = document.getElementById('recognitionImage');
-                if (recognitionImage) {
-                    recognitionImage.addEventListener('change', previewImage);
+                if (section === 'createGalleries') {
+                    loadProcessedDatasets();
                 }
                 
-                const btnRecognize = document.getElementById('btnRecognize');
-                if (btnRecognize) {
-                    btnRecognize.removeEventListener('click', performRecognition); // Remove any existing
-                    btnRecognize.addEventListener('click', performRecognition);
+                // Load student data folders when upload section is activated
+                if (section === 'upload') {
+                    loadStudentDataFolders();
                 }
                 
-                // Update button state
-                updateRecognizeButtonState();
+                // Reload data when entering specific sections
+                if (section === 'recognition') {
+                    console.log("Recognition section activated, reloading gallery checkboxes");
+                    loadGalleryCheckboxes();
+                } else if (section === 'galleries') {
+                    console.log("Galleries section activated, reloading galleries list");
+                    loadGalleries();
+                } else if (section === 'createGalleries') {
+                    console.log("Create Galleries section activated, loading processed datasets");
+                    loadProcessedDatasets();
+                }
+                
+                if (section === 'recognition') {
+                    console.log("Recognition section activated, reinitializing");
+                    
+                    // Reload gallery checkboxes
+                    loadGalleryCheckboxes();
+                    
+                    // Reinitialize event listeners
+                    const recognitionImage = document.getElementById('recognitionImage');
+                    if (recognitionImage) {
+                        recognitionImage.addEventListener('change', previewImage);
+                    }
+                    
+                    const btnRecognize = document.getElementById('btnRecognize');
+                    if (btnRecognize) {
+                        btnRecognize.removeEventListener('click', performRecognition); // Remove any existing
+                        btnRecognize.addEventListener('click', performRecognition);
+                    }
+                    
+                    // Update button state
+                    updateRecognizeButtonState();
+                }
             }
         });
     });
+    
+    // Page-specific initialization based on current URL
+    const currentPath = window.location.pathname;
+    console.log("Current page:", currentPath);
+    
+    // Initialize page-specific functionality directly (no sections to activate)
+    if (currentPath === '/process_video' || currentPath.includes('process_video')) {
+        console.log("Initializing process video page");
+        // Initialize the process video page functionality
+        setTimeout(() => {
+            loadStudentDataFolders();
+        }, 100);
+    } else if (currentPath === '/create_gallery' || currentPath.includes('create_gallery')) {
+        console.log("Initializing create gallery page");
+        // Initialize the create gallery page functionality
+        setTimeout(() => {
+            loadProcessedDatasets();
+        }, 100);
+    } else if (currentPath === '/view_gallery' || currentPath.includes('view_gallery')) {
+        console.log("Initializing view gallery page");
+        // Initialize the view gallery page functionality
+        setTimeout(() => {
+            loadGalleries();
+        }, 100);
+    } else if (currentPath === '/face_reg' || currentPath.includes('face_reg')) {
+        console.log("Initializing face recognition page");
+        // Initialize the face recognition page functionality
+        setTimeout(() => {
+            loadGalleryCheckboxes();
+        }, 100);
+    } else if (currentPath === '/admin' || currentPath.includes('admin')) {
+        console.log("Initializing admin page");
+        // Initialize the admin page functionality
+        setTimeout(() => {
+            loadAdminData();
+        }, 100);
+    }
     
     // Add debug logging for forms
     
@@ -921,6 +960,12 @@ async function performRecognition() {
 function activateSection(sectionId) {
     console.log(`Activating section: ${sectionId}`);
     
+    // Skip if no sectionId provided
+    if (!sectionId) {
+        console.log("No section ID provided, skipping activation");
+        return;
+    }
+    
     // Hide all sections
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
@@ -930,8 +975,10 @@ function activateSection(sectionId) {
     const selectedSection = document.getElementById(sectionId);
     if (selectedSection) {
         selectedSection.classList.add('active');
+        console.log(`Successfully activated section: ${sectionId}`);
     } else {
-        console.error(`Section with ID "${sectionId}" not found`);
+        console.log(`Section with ID "${sectionId}" not found on this page - this is normal for split pages`);
+        return; // Exit early if section doesn't exist
     }
     
     // Perform specific actions for certain sections

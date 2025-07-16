@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Gallery Manager</title>
+    <link favicon rel="icon" href="/static/images/gallery.png" type="image/x-icon">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css?v=1.1">
+    
+    <!-- Toast Notifications CSS -->
+    <link rel="stylesheet" href="/static/css/toast.css?v=1.1">
+</head>
+<body>
+    <!-- Enhanced Header Component -->
+    <header class="header">
+        <div class="header-container d-flex justify-content-between align-items-center">
+            <div class="nba">
+                <img src="/static/images/image.png" class="nba-logo" alt="College Logo">
+            </div>
+            <div class="college-info flex-grow-1 text-center">
+                <h1>SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
+            </div>
+            <div class="logout-container ms-auto">
+                <button id="logoutBtn" class="btn btn-outline-danger btn-lg" type="button"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom custom-navbar">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="fas fa-user-circle me-2 text-primary fs-4"></i>
+                <span class="fw-bold text-primary">Face Recognition Gallery</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i> Home
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/process_video">
+                            <i class="fas fa-video me-1"></i> Process Videos
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/create_gallery">
+                            <i class="fas fa-database me-1"></i> Create Galleries
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/view_gallery">
+                            <i class="fas fa-images me-1"></i> View Galleries
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/face_reg">
+                            <i class="fas fa-user-check me-1"></i> Face Recognition
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin">
+                            <i class="fas fa-cog me-1"></i> Admin
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="bg-light p-5 rounded shadow-sm">
+            <div class="container py-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="feature-icon bg-white text-primary rounded-circle p-3 me-3">
+                            <i class="fas fa-video fa-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-1">Process Student Videos</h4>
+                            <p class="mb-0 opacity-75"><i class="fas fa-info-circle me-1"></i> Extract faces from recorded student videos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-5">
+                    <div class="row mb-5">
+                        <div class="col-md-7">
+                            <form id="selectStudentDataForm">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="studentBatchYear" class="form-label fw-bold"><i class="fas fa-calendar-alt me-2"></i>Batch Year</label>
+                                        <select id="studentBatchYear" class="form-select form-control-lg" required>
+                                            <option value="" selected disabled>Select Batch Year</option>
+                                            <!-- Will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="studentDepartment" class="form-label fw-bold"><i class="fas fa-building me-2"></i>Department</label>
+                                        <select id="studentDepartment" class="form-select form-control-lg" required>
+                                            <option value="" selected disabled>Select Department</option>
+                                            <!-- Will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-4">
+                                    <button type="submit" id="btnLoadStudentData" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-search me-2"></i>Load Student Data
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="bg-light h-100 p-5 rounded">
+                                <h5 class="border-bottom pb-2"><i class="fas fa-lightbulb text-warning me-2"></i>How It Works</h5>
+                                <ol class="mt-3">
+                                    <li class="mb-2">Select the <strong>batch year</strong> and <strong>department</strong></li>
+                                    <li class="mb-2">View student statistics and pending videos</li>
+                                    <li class="mb-2">Process videos to extract faces</li>
+                                    <li>Create galleries from processed data</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Student Data Statistics -->
+                    <div id="studentDataStats" class="mt-4" style="display: none;">
+                        
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                
+                                <h5 class="card-title"><i class="fas fa-chart-bar me-2"></i>Student Data Statistics</h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3">
+                                            <div class="h2 mb-0 text-primary" id="totalStudents">0</div>
+                                            <div class="text-muted">Total Students</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3">
+                                            <div class="h2 mb-0 text-success" id="studentsWithVideo">0</div>
+                                            <div class="text-muted">With Video</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3">
+                                            <div class="h2 mb-0 text-warning" id="studentsPending">0</div>
+                                            <div class="text-muted">Pending Processing</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center p-3">
+                                            <div class="h2 mb-0 text-info" id="studentsProcessed">0</div>
+                                            <div class="text-muted">Processed</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <button id="btnQualityCheck" class="btn btn-warning btn-lg w-100 mb-3">
+                                                <i class="fas fa-shield-alt me-2"></i>Check Quality First
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button id="btnProcessStudentVideos" class="btn btn-success btn-lg w-100 mb-3" disabled>
+                                                <i class="fas fa-cog me-2"></i>Process Videos
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button id="btnViewPendingStudents" class="btn btn-outline-primary w-100">
+                                                <i class="fas fa-list me-2"></i>View Pending Students
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                    <div id="pendingStudentsList" class="mt-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Students Pending Processing</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="pendingStudentsTable"></div>
+                            </div>
+                        </div>
+                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quality Check Results Section -->
+                    <div id="qualityCheckResults" class="mt-4" style="display: none;">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-analytics me-2"></i>Quality Check Results</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="qualityResultContent"></div>
+                            </div>
+                        </div>
+                    </dizv>
+                    
+
+                    
+                    <div id="processingResult" class="mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Footer -->
+    <footer class="footer bg-gradient mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid rgba(0,0,0,0.05);bottom:0;">
+                        <div class="container py-4">
+<div class="row align-items-center">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-circle text-primary fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Face Recognition</h5>
+                            <p class="mb-0 text-muted small">Gallery Manager</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0 text-center">
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-0">
+                        <span class="text-muted">Designed & Developed by</span>
+                        <span class="fw-medium ms-1"><a href="/about" style="list-style: none;">AI & ML Students</a></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js?v=1.1"></script>
+    <script>
+        // Attach logout functionality directly here to guarantee it works
+        (function() {
+            function handleLogout() {
+                localStorage.removeItem('userRole');
+                window.location.href = '/login';
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                var logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', handleLogout);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
