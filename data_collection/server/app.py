@@ -171,6 +171,69 @@ def get_department_id(name: str):
     
     return None
 
+def extract_year_from_regno(regno: str) -> tuple:
+    """Extract admission year and graduation year from registration number"""
+    try:
+        if len(regno) >= 6:
+            # For registration numbers like 714023247046, extract the year part (23)
+            year_part = regno[4:6]  # Extract positions 4-5
+            year = int(year_part)
+            
+            # Convert 2-digit year to 4-digit admission year
+            if year >= 90:  # Assume 90-99 means 1990-1999
+                admission_year = 1900 + year
+            else:  # 00-89 means 2000-2089
+                admission_year = 2000 + year
+            
+            # Calculate graduation year (admission year + 4 for undergraduate)
+            graduation_year = admission_year + 4
+                
+            return str(admission_year), str(graduation_year)
+    except (ValueError, IndexError):
+        pass
+    
+    # Default fallback
+    return "2023", "2027"
+
+def get_year_display(regno: str) -> str:
+    """Get year display format like '2023 - 2027'"""
+    admission_year, graduation_year = extract_year_from_regno(regno)
+    return f"{admission_year} - {graduation_year}"
+
+def get_graduation_year(regno: str) -> str:
+    """Get graduation year for folder structure"""
+    _, graduation_year = extract_year_from_regno(regno)
+    return graduation_year
+
+def extract_dept_code_from_regno(regno: str) -> str:
+    """Extract department code from registration number"""
+    try:
+        if len(regno) >= 9:
+            # For registration numbers like 714023247046, extract the dept code (247)
+            dept_code = regno[6:9]  # Extract positions 6-8
+            return dept_code
+    except (ValueError, IndexError):
+        pass
+    
+    # Default fallback
+    return None
+
+def get_department_name_by_code(dept_code: str) -> str:
+    """Get department name from department code"""
+    try:
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM departments WHERE department_id=?", (dept_code,))
+        result = cur.fetchone()
+        conn.close()
+        if result:
+            return result[0]
+    except Exception as e:
+        print(f"Error getting department name: {e}")
+    
+    return None
+
 # Routes
 @app.route('/')
 def index():
@@ -196,22 +259,25 @@ def start_session():
         
     student_id = data.get('studentId')  # Registration Number
     name = data.get('name')  # Full Name
-    year = data.get('year')
+    year_display = data.get('year')  # This is now the display format like "2023 - 2027"
     dept_name = data.get('dept')
     
-    if not all([student_id, year, dept_name]):
-        return jsonify({"error": "Student ID, year, and department are required"}), 400
+    if not all([student_id, dept_name]):
+        return jsonify({"error": "Student ID and department are required"}), 400
     
-    # Get department ID from name
-    dept_id = get_department_id(dept_name)
-    if not dept_id:
-        return jsonify({"error": f"Invalid department name: {dept_name}"}), 400
+    # Extract department code from registration number
+    dept_code = extract_dept_code_from_regno(student_id)
+    if not dept_code:
+        return jsonify({"error": "Invalid registration number format"}), 400
+    
+    # Get graduation year for folder structure
+    graduation_year = get_graduation_year(student_id)
     
     # Create unique session ID
     session_id = str(uuid.uuid4())
     
-    # Use department ID for directory structure
-    dept_year_dir = os.path.join(DATA_DIR, f"{dept_id}_{year}")
+    # Use department code and graduation year for directory structure
+    dept_year_dir = os.path.join(DATA_DIR, f"{dept_code}_{graduation_year}")
     os.makedirs(dept_year_dir, exist_ok=True)
     
     # Create student directory within department-year folder
@@ -219,14 +285,17 @@ def start_session():
     os.makedirs(student_dir, exist_ok=True)
     
     # Create session info - store both ID and name
+    admission_year, _ = extract_year_from_regno(student_id)
     session_data = {
         "sessionId": session_id,
         "regNo": student_id,
         "name": name,
-        "year": year,
+        "year": graduation_year,  # Store graduation year for consistency
+        "admission_year": admission_year,  # Store admission year for reference
+        "year_display": year_display,  # Store the display format
         "dept": dept_name,
-        "dept_id": dept_id,  # Store the department ID
-        "batch": f"Batch{year}",
+        "dept_id": dept_code,  # Store the department code
+        "batch": f"Batch{graduation_year}",
         "startTime": datetime.now().isoformat(),
         "videoUploaded": False,
         "facesExtracted": False,
@@ -249,18 +318,22 @@ def upload_video(session_id):
     file = request.files['video']
     student_id = request.form.get('studentId')
     name = request.form.get('name')
-    year = request.form.get('year')
+    year_display = request.form.get('year')  # This is now display format
     dept_name = request.form.get('dept')
     
     if not student_id:
         return jsonify({"error": "Registration Number is required"}), 400
     
-    dept_id = get_department_id(dept_name)
-    if not dept_id:
-        return jsonify({"error": f"Invalid department name: {dept_name}"}), 400
+    # Extract department code from registration number
+    dept_code = extract_dept_code_from_regno(student_id)
+    if not dept_code:
+        return jsonify({"error": "Invalid registration number format"}), 400
     
-    # Use department ID for directory structure
-    dept_year_dir = os.path.join(DATA_DIR, f"{dept_id}_{year}")
+    # Get graduation year for folder structure
+    graduation_year = get_graduation_year(student_id)
+    
+    # Use department code and graduation year for directory structure
+    dept_year_dir = os.path.join(DATA_DIR, f"{dept_code}_{graduation_year}")
     os.makedirs(dept_year_dir, exist_ok=True)
     
     # Create student directory within department-year folder
@@ -440,10 +513,12 @@ def upload_video(session_id):
         # Update additional fields if provided in form data
         # if name:
         #     session_data["name"] = name
-        if year:
-            session_data["year"] = year
-        if dept_id:
-            session_data["dept_id"] = dept_id
+        if graduation_year:
+            session_data["year"] = graduation_year
+        if dept_code:
+            session_data["dept_id"] = dept_code
+        if year_display:
+            session_data["year_display"] = year_display
         
         # Save updated session data with student reg number as filename only
         student_json_file = os.path.join(student_dir, f"{student_id}.json")
@@ -526,27 +601,26 @@ def upload_video(session_id):
 def reset_faces(session_id):
     data = request.json if request.json else {}
     student_id = data.get('studentId')
-    year = data.get('year')
+    year_display = data.get('year')  # This is now display format
     dept_name = data.get('dept')
     
     if not student_id:
         return jsonify({"error": "Student ID is required"}), 400
-    if not year:
-        return jsonify({"error": "Year is required"}), 400
-    if not dept_name:
-        return jsonify({"error": "Department is required"}), 400
     
-    # Get department ID from name
-    dept_id = get_department_id(dept_name)
-    if not dept_id:
-        return jsonify({"error": f"Invalid department name: {dept_name}"}), 400
+    # Extract department code from registration number
+    dept_code = extract_dept_code_from_regno(student_id)
+    if not dept_code:
+        return jsonify({"error": "Invalid registration number format"}), 400
     
-    # Use department ID for directory structure
-    dept_year_dir = os.path.join(DATA_DIR, f"{dept_id}_{year}")
+    # Get graduation year for folder structure
+    graduation_year = get_graduation_year(student_id)
+    
+    # Use department code and graduation year for directory structure
+    dept_year_dir = os.path.join(DATA_DIR, f"{dept_code}_{graduation_year}")
     student_dir = os.path.join(dept_year_dir, student_id)
     
     # Also check gallery directory for cleanup
-    gallery_dept_year_dir = os.path.join(GALLERY_DIR, f"{dept_id}_{year}")
+    gallery_dept_year_dir = os.path.join(GALLERY_DIR, f"{dept_code}_{graduation_year}")
     gallery_student_dir = os.path.join(gallery_dept_year_dir, student_id)
     
     # Reset both data collection faces and gallery faces if they exist
@@ -670,7 +744,7 @@ def student_login():
         cur = conn.cursor()
         cur.execute("SELECT 1 FROM students WHERE register_no=? AND dob=?", (regno, dob))
         result = cur.fetchone()
-        conn
+        conn.close()
         if result:
             return jsonify({'success': True})
         else:
@@ -685,14 +759,33 @@ def get_student_name():
     if not regno:
         return jsonify({'success': False, 'message': 'Register number required.'}), 400
     try:
+        # Extract department code from registration number
+        dept_code = extract_dept_code_from_regno(regno)
+        if not dept_code:
+            return jsonify({'success': False, 'message': 'Invalid registration number format.'}), 400
+        
+        # Get department name from code
+        department_name = get_department_name_by_code(dept_code)
+        if not department_name:
+            return jsonify({'success': False, 'message': 'Department not found for this registration number.'}), 404
+        
         db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
         conn = sqlite3.connect(db_path)
         cur = conn.cursor()
         cur.execute("SELECT name FROM students WHERE register_no=?", (regno,))
         result = cur.fetchone()
         conn.close()
+        
         if result:
-            return jsonify({'success': True, 'name': result[0]})
+            name = result[0]
+            # Get year display format (admission - graduation)
+            year_display = get_year_display(regno)
+            return jsonify({
+                'success': True, 
+                'name': name,
+                'year': year_display,
+                'department': department_name
+            })
         else:
             return jsonify({'success': False, 'message': 'No student found.'}), 404
     except Exception as e:
@@ -717,6 +810,112 @@ def get_department_code():
             return jsonify({'success': False, 'message': 'No department found.'}), 404
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+@app.route('/api/get-student-status', methods=['POST'])
+def get_student_status():
+    data = request.get_json()
+    regno = data.get('regno')
+    if not regno:
+        return jsonify({'success': False, 'message': 'Register number required.'}), 400
+    
+    try:
+        # Extract department code from registration number
+        dept_code = extract_dept_code_from_regno(regno)
+        if not dept_code:
+            return jsonify({'success': False, 'message': 'Invalid registration number format.'}), 400
+        
+        # Get department name from code
+        department_name = get_department_name_by_code(dept_code)
+        if not department_name:
+            return jsonify({'success': False, 'message': 'Department not found for this registration number.'}), 404
+        
+        # Get student info from database
+        db_path = os.path.join(PROJECT_ROOT, 'data', 'app.db')
+        conn = sqlite3.connect(db_path)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM students WHERE register_no=?", (regno,))
+        student_result = cur.fetchone()
+        conn.close()
+        
+        if not student_result:
+            return jsonify({'success': False, 'message': 'Student not found.'}), 404
+        
+        name = student_result[0]
+        graduation_year = get_graduation_year(regno)
+        
+        # Construct the expected folder path based on department code and graduation year
+        dept_year_folder = f"{dept_code}_{graduation_year}"
+        student_folder_path = os.path.join(PROJECT_ROOT, 'data', 'student_data', dept_year_folder, regno)
+        json_file_path = os.path.join(student_folder_path, f"{regno}.json")
+        
+        # Check if student folder exists
+        if not os.path.exists(student_folder_path):
+            return jsonify({
+                'success': True,
+                'status': 'new',
+                'message': 'Ready for first-time data collection',
+                'icon': 'bi-person-plus',
+                'color': 'info'
+            })
+        
+        # Check if JSON file exists
+        if not os.path.exists(json_file_path):
+            return jsonify({
+                'success': True,
+                'status': 'new',
+                'message': 'Ready for first-time data collection',
+                'icon': 'bi-person-plus',
+                'color': 'info'
+            })
+        
+        # Read and parse JSON file
+        with open(json_file_path, 'r') as f:
+            student_data = json.load(f)
+        
+        # Check if video file exists
+        video_files = [f for f in os.listdir(student_folder_path) if f.endswith(('.mp4', '.avi', '.mov', '.mkv'))]
+        
+        if not video_files:
+            return jsonify({
+                'success': True,
+                'status': 'no_video',
+                'message': 'Please upload video for processing',
+                'icon': 'bi-camera-video',
+                'color': 'warning'
+            })
+        
+        # Check quality check status
+        quality_check = student_data.get('quality_check', {})
+        
+        if not quality_check:
+            return jsonify({
+                'success': True,
+                'status': 'processing',
+                'message': 'Video uploaded, quality check pending',
+                'icon': 'bi-hourglass-split',
+                'color': 'warning'
+            })
+        
+        # Check if quality check passed
+        if quality_check.get('status') == 'pass' or quality_check.get('passed', False):
+            return jsonify({
+                'success': True,
+                'status': 'pass',
+                'message': 'Quality check passed - Ready to proceed',
+                'icon': 'bi-check-circle',
+                'color': 'success'
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'status': 'failed',
+                'message': 'Video failed quality check - Please try again',
+                'icon': 'bi-x-circle',
+                'color': 'danger'
+            })
+            
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error checking status: {str(e)}'}), 500
 
 if __name__ == '__main__':
     import sys

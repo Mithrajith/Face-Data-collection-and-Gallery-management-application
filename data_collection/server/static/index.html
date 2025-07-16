@@ -64,6 +64,19 @@
             <label for="dept">Department:</label>
             <input type="text" id="dept" name="deptr" readonly />
           </div>
+          
+          <!-- Status Indicator -->
+          <div class="form-group">
+            <label for="status">Status:</label>
+            <div id="status-indicator" class="status-indicator">
+              <div class="status-content">
+                <i id="status-icon" class="bi bi-clock-history"></i>
+                <span id="status-text">Checking status...</span>
+              </div>
+              <div id="status-message" class="status-message"></div>
+            </div>
+          </div>
+          
         <button type="submit" class="btn btn-primary">
           <i class="bi bi-arrow-right-circle"></i> Start Process
         </button>
@@ -191,30 +204,127 @@
           modal1.style.display = 'block';
         });
       }
-      // Autofill name when registration number is entered
+      // Autofill name and check status when registration number is entered
       var regNoInput = document.getElementById('studentId');
       var nameInput = document.getElementById('name');
-      regNoInput.addEventListener('input', async function() {
-        const regno = regNoInput.value.trim();
+      var yearInput = document.getElementById('year');
+      var deptInput = document.getElementById('dept');
+      var statusIndicator = document.getElementById('status-indicator');
+      var statusIcon = document.getElementById('status-icon');
+      var statusText = document.getElementById('status-text');
+      var statusMessage = document.getElementById('status-message');
+      
+      async function updateStudentInfo(regno) {
         if (/^\d{12}$/.test(regno)) {
+          // Show loading state
+          statusIndicator.className = 'status-indicator';
+          statusIcon.className = 'bi bi-hourglass-split';
+          statusText.textContent = 'Checking...';
+          statusMessage.textContent = 'Please wait while we verify your details';
+          
           try {
-            const response = await fetch('/api/get-student-name', {
+            // Get student name and basic info
+            const nameResponse = await fetch('/api/get-student-name', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ regno })
             });
-            const data = await response.json();
-            if (data.success) {
-              nameInput.value = data.name;
+            const nameData = await nameResponse.json();
+            
+            if (nameData.success) {
+              nameInput.value = nameData.name;
+              yearInput.value = nameData.year;
+              deptInput.value = nameData.department;
+              
+              // Get student status
+              const statusResponse = await fetch('/api/get-student-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ regno })
+              });
+              const statusData = await statusResponse.json();
+              
+              if (statusData.success) {
+                updateStatusDisplay(statusData);
+              } else {
+                showErrorStatus('Unable to check status');
+              }
             } else {
-              nameInput.value = '';
+              resetFields();
+              showErrorStatus('Student not found');
             }
           } catch (e) {
-            nameInput.value = '';
+            resetFields();
+            showErrorStatus('Connection error');
           }
+        } else if (regno.length > 0) {
+          resetFields();
+          showErrorStatus('Please enter a valid 12-digit registration number');
         } else {
-          nameInput.value = '';
+          resetFields();
+          showDefaultStatus();
         }
+      }
+      
+      function showErrorStatus(message) {
+        statusIndicator.className = 'status-indicator status-failed';
+        statusIcon.className = 'bi bi-exclamation-triangle';
+        statusText.textContent = 'Error';
+        statusMessage.textContent = message;
+      }
+      
+      function showDefaultStatus() {
+        statusIndicator.className = 'status-indicator';
+        statusIcon.className = 'bi bi-person-plus';
+        statusText.textContent = 'Enter Registration Number';
+        statusMessage.textContent = 'Please enter your 12-digit registration number';
+      }
+      
+      function updateStatusDisplay(statusData) {
+        // Remove all status classes
+        statusIndicator.className = 'status-indicator';
+        
+        // Add appropriate status class
+        statusIndicator.classList.add(`status-${statusData.status}`);
+        
+        // Update icon
+        statusIcon.className = `bi ${statusData.icon}`;
+        
+        // Update text
+        statusText.textContent = getStatusDisplayText(statusData.status);
+        
+        // Update message
+        statusMessage.textContent = statusData.message || '';
+      }
+      
+      function getStatusDisplayText(status) {
+        switch(status) {
+          case 'new': return 'New Student';
+          case 'processing': return 'Processing';
+          case 'pass': return 'Completed';
+          case 'failed': return 'Failed';
+          case 'no_video': return 'No Video';
+          default: return 'Unknown';
+        }
+      }
+      
+      function resetStatusDisplay() {
+        statusIndicator.className = 'status-indicator';
+        statusIcon.className = 'bi bi-clock-history';
+        statusText.textContent = 'Checking status...';
+        statusMessage.textContent = '';
+      }
+      
+      function resetFields() {
+        nameInput.value = '';
+        yearInput.value = '';
+        deptInput.value = '';
+        showDefaultStatus();
+      }
+      
+      regNoInput.addEventListener('input', function() {
+        const regno = regNoInput.value.trim();
+        updateStudentInfo(regno);
       });
     });
   </script>
@@ -226,8 +336,21 @@
       var loginRegNo = localStorage.getItem('studentRegNo');
       if (regNoInput && loginRegNo) {
         regNoInput.value = loginRegNo;
-        // Optionally, trigger input event to autofill name/year/department
+        // Trigger input event to autofill name/year/department and check status
         regNoInput.dispatchEvent(new Event('input'));
+      } else {
+        // Reset status display if no saved registration number
+        var statusIndicator = document.getElementById('status-indicator');
+        var statusIcon = document.getElementById('status-icon');
+        var statusText = document.getElementById('status-text');
+        var statusMessage = document.getElementById('status-message');
+        
+        if (statusIndicator) {
+          statusIndicator.className = 'status-indicator';
+          statusIcon.className = 'bi bi-person-plus';
+          statusText.textContent = 'Enter Registration Number';
+          statusMessage.textContent = 'Please enter your 12-digit registration number';
+        }
       }
     });
   </script>
