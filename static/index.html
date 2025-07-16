@@ -16,6 +16,91 @@
     
     <!-- Toast Notifications CSS -->
     <link rel="stylesheet" href="/static/css/toast.css?v=1.1">
+    
+    <style>
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            height: 100%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-color);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card .card-body {
+            padding: 35px 25px;
+            text-align: center;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .stat-number {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-card-1 { --card-color: #667eea; }
+        .stat-card-1 .stat-icon { background: #667eea; }
+        
+        .stat-card-2 { --card-color: #f093fb; }
+        .stat-card-2 .stat-icon { background: #f093fb; }
+        
+        .stat-card-3 { --card-color: #4facfe; }
+        .stat-card-3 .stat-icon { background: #4facfe; }
+        
+        .stat-card-4 { --card-color: #43e97b; }
+        .stat-card-4 .stat-icon { background: #43e97b; }
+        
+        .loading-spinner {
+            font-size: 2rem;
+            color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     <!-- Enhanced Header Component -->
@@ -97,59 +182,62 @@
                 <p class="mb-4">This application helps you process videos to create face galleries and perform accurate face recognition for student identification.</p>
 
                 <div class="row g-4 mt-4">
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-card-1">
                             <div class="card-body">
-                                <div class="icon-circle bg-primary-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-video fa-2x text-primary"></i>
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">Process Videos</h5>
-                                <p class="card-text">Extract faces from videos and prepare for gallery creation.</p>
-                                <a href="/process_video" class="btn btn-primary mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>Get Started
-                                </a>
+                                <div class="stat-number" id="totalStudents">
+                                    <i class="fas fa-spinner loading-spinner"></i>
+                                </div>
+                                <div class="stat-label">Total Students</div>
+                             
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-card-2">
                             <div class="card-body">
-                                <div class="icon-circle bg-success-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-database fa-2x text-success"></i>
+                                <div class="stat-icon">
+                                    <i class="fas fa-video"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">Create Galleries</h5>
-                                <p class="card-text">Build face recognition galleries from processed data.</p>
-                                <a href="/create_gallery" class="btn btn-success mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>Start Building
-                                </a>
+                                <div class="stat-number" id="videosUploaded">
+                                    <i class="fas fa-spinner loading-spinner"></i>
+                                </div>
+                                <div class="stat-label">Videos Uploaded</div>
+                     
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-card-3">
                             <div class="card-body">
-                                <div class="icon-circle bg-info-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-images fa-2x text-info"></i>
+                                <div class="stat-icon">
+                                    <i class="fas fa-database"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">View Galleries</h5>
-                                <p class="card-text">Browse and manage existing face recognition galleries.</p>
-                                <a href="/view_gallery" class="btn btn-info text-white mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>View Now
-                                </a>
+                                <div class="stat-number" id="mlModels">
+                                    <i class="fas fa-spinner loading-spinner"></i>
+                                </div>
+                                <div class="stat-label">ML Models</div>
+                            
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card home-card text-center h-100">
+                    
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-card-4">
                             <div class="card-body">
-                                <div class="icon-circle bg-danger-subtle p-3 mb-3 mx-auto" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-user-check fa-2x text-danger"></i>
+                                <div class="stat-icon">
+                                    <i class="fas fa-hdd"></i>
                                 </div>
-                                <h5 class="card-title fw-bold">Face Recognition</h5>
-                                <p class="card-text">Upload an image to identify faces using your galleries.</p>
-                                <a href="/face_reg" class="btn btn-danger mt-3">
-                                    <i class="fas fa-arrow-right me-2"></i>Try It Now
-                                </a>
+                                <div class="stat-number" id="storageUsed">
+                                    <i class="fas fa-spinner loading-spinner"></i>
+                                </div>
+                                <div class="stat-label">Storage Used</div>
+
                             </div>
                         </div>
                     </div>
@@ -189,19 +277,113 @@
     
     <!-- Custom JavaScript -->
     <script>
-        // Simplified JavaScript for index.html - only logout functionality needed
-        (function() {
-            function handleLogout() {
-                localStorage.removeItem('userRole');
-                window.location.href = '/login';
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                var logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', handleLogout);
+        // Dashboard statistics functionality
+        async function loadDashboardStats() {
+            try {
+                // Try to use a single dashboard endpoint if available, otherwise aggregate from multiple endpoints
+                let stats = {
+                    totalStudents: 0,
+                    videosUploaded: 0,
+                    mlModels: 0,
+                    storageUsed: '0.0'
+                };
+
+                // Load database stats and galleries
+                const [dbStats, galleries] = await Promise.all([
+                    fetch('/database/stats').then(r => r.json()).catch(() => ({})),
+                    fetch('/galleries').then(r => r.json()).catch(() => ({galleries: []}))
+                ]);
+
+                // Get ML models count
+                stats.mlModels = galleries.galleries?.length || 0;
+
+                // Try to get student data
+                try {
+                    const studentFolders = await fetch('/student-data/folders').then(r => r.json());
+                    
+                    // Aggregate student data from all folders
+                    for (const folder of studentFolders.folders || []) {
+                        const [dept, year] = folder.split('_');
+                        try {
+                            const summary = await fetch(`/student-data/${dept}/${year}/summary`).then(r => r.json());
+                            stats.totalStudents += summary.totalStudents || 0;
+                            stats.videosUploaded += summary.studentsWithVideo || 0;
+                        } catch (e) {
+                            console.warn(`Failed to get stats for ${folder}:`, e);
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Failed to get student data stats:', e);
+                    // Fallback to database stats if available
+                    stats.totalStudents = dbStats.total_students || 0;
                 }
-            });
-        })();
+
+                // Estimate storage usage
+                stats.storageUsed = await calculateStorageUsage();
+
+                // Update the UI with formatted numbers
+                updateStatCard('totalStudents', formatNumber(stats.totalStudents));
+                updateStatCard('videosUploaded', formatNumber(stats.videosUploaded));
+                updateStatCard('mlModels', formatNumber(stats.mlModels));
+                updateStatCard('storageUsed', stats.storageUsed + ' GB');
+
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                // Show error state
+                updateStatCard('totalStudents', 'N/A');
+                updateStatCard('videosUploaded', 'N/A');
+                updateStatCard('mlModels', 'N/A');
+                updateStatCard('storageUsed', 'N/A');
+            }
+        }
+
+        async function calculateStorageUsage() {
+            try {
+                // This is a rough estimation - in production you'd want a proper backend endpoint
+                const response = await fetch('/check-directories');
+                const data = await response.json();
+                
+                // Estimate based on file counts (very rough approximation)
+                const totalFiles = (data.data_dir_files?.length || 0) + (data.gallery_dir_files?.length || 0);
+                const estimatedGB = Math.max(0.1, (totalFiles * 0.001)).toFixed(1); // Very rough estimate
+                
+                return estimatedGB;
+            } catch (e) {
+                return '0.0';
+            }
+        }
+
+        function updateStatCard(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.innerHTML = value;
+            }
+        }
+
+        function formatNumber(num) {
+            if (typeof num !== 'number') return num;
+            return num.toLocaleString();
+        }
+
+        // Logout functionality
+        function handleLogout() {
+            localStorage.removeItem('userRole');
+            window.location.href = '/login';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup logout button
+            var logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Load dashboard statistics
+            loadDashboardStats();
+
+            // Refresh stats every 30 seconds
+            setInterval(loadDashboardStats, 30000);
+        });
     </script>
 </body>
 </html>

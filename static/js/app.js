@@ -516,6 +516,56 @@ async function init() {
 }
 
 
+// ...existing code...
+async function loadDashboardStats()
+{
+    try {
+        let stats = {
+            totalStudents: 0,
+            videosUploaded: 0,
+            mlModels: 0,
+            storageUsed: '0.0'
+        };
+
+        // Load database stats and galleries
+        const [dbStats, galleries] = await Promise.all([
+            fetch('/database/stats').then(r => r.json()).catch(() => ({})),
+            fetch('/galleries').then(r => r.json()).catch(() => ({galleries: []}))
+        ]);
+
+        // Try to get student data
+        try {
+            const studentFolders = await fetch('/student-data/folders').then(r => r.json());
+            
+            // Aggregate student data from all folders
+            for (const folder of studentFolders.folders || []) {
+                const [dept, year] = folder.split('_');
+                try {
+                    const summary = await fetch(`/student-data/${dept}/${year}/summary`).then(r => r.json());
+                    stats.totalStudents += summary.totalStudents || 0;
+                    stats.videosUploaded += summary.studentsWithVideo || 0;
+                } catch (e) {
+                    console.warn(`Failed to get stats for ${folder}:`, e);
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to get student data stats:', e);
+            // Fallback to database stats if available
+            stats.totalStudents = dbStats.total_students || 0;
+        }
+
+        // Update the UI with formatted numbers
+        updateStatCard('totalStudents', formatNumber(stats.totalStudents));
+        updateStatCard('videosUploaded', formatNumber(stats.videosUploaded));
+        // ...existing code...
+    }
+    catch (error) {
+        console.error('Error loading dashboard stats:', error);
+        showAlert('error', 'Failed to load dashboard stats: ' + error.message);
+    }
+}
+
+
 // Load batch years and departments for dropdowns
 async function loadBatchYearsAndDepartments() {
     try {
