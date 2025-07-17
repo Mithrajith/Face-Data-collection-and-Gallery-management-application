@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIET - Student Data Report</title>
+    <link rel="icon" href="static/images/image.png" type="image/x-icon">\
+    <link rel="stylesheet" href="/static/css/report.css">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-chart-line me-3"></i>
+                Student Data Report
+            </h1>
+            <p class="page-subtitle">
+                View student data upload status by department and batch
+            </p>
+        </div>
+        
+        <!-- Filter Section -->
+        <div class="filter-card">
+            <h5 class="filter-title">
+                <i class="fas fa-filter"></i>
+                Select Department and Batch
+            </h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="departmentSelect" class="form-label fw-bold">Department *</label>
+                    <select class="form-select" id="departmentSelect" onchange="validateAndLoadData()" required>
+                        <option value="">Select Department</option>
+                        <!-- Options will be populated dynamically from API -->
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="batchSelect" class="form-label fw-bold">Batch *</label>
+                    <select class="form-select" id="batchSelect" onchange="validateAndLoadData()" required>
+                        <option value="">Select Batch</option>
+                        <!-- Options will be populated dynamically from API -->
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-primary me-2" onclick="loadStudentData()" id="loadDataBtn" disabled>
+                        <i class="fas fa-search me-2"></i>Load Data
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+        
+        <!-- Department Statistics -->
+        <div id="statsSection" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalStudents">0</div>
+                        <div class="stats-label">Total Students</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card success">
+                        <div class="stats-number" id="uploadedCount">0</div>
+                        <div class="stats-label">Uploaded Successfully</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card warning">
+                        <div class="stats-number" id="loggedInCount">0</div>
+                        <div class="stats-label">Logged in but not uploaded</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card danger">
+                        <div class="stats-number" id="notLoggedInCount">0</div>
+                        <div class="stats-label">Not logged in</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Student Data Table -->
+        <div id="dataTableSection" style="display: none;">
+            <div class="data-table-card">
+                <h5 class="table-title">
+                    <span>
+                        <i class="fas fa-table"></i>
+                        Student Data Details
+                    </span>
+                    <div class="d-flex gap-2">
+                        <span id="filterInfo" class="badge bg-primary me-2"></span>
+                        <div class="dropdown">
+                            <button class="btn btn-success btn-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="#" onclick="exportToCSV()">
+                                    <i class="fas fa-file-csv me-2"></i>Export as CSV
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="printTable()">
+                                    <i class="fas fa-print me-2"></i>Print Table
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </h5>
+                
+                <div class="mb-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Showing <span id="displayedRows">0</span> students. Table is scrollable for better viewing.
+                    </small>
+                </div>
+                
+                <div class="table-responsive">
+                    <div class="table-container">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="8%">S.No</th>
+                                    <th width="15%">Reg No</th>
+                                    <th width="25%">Student Name</th>
+                                    <th width="15%">Department</th>
+                                    <th width="10%">Batch</th>
+                                    <th width="20%">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody">
+                                <!-- Student data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- No Data Found Section -->
+        <div id="noDataSection" class="no-data-section" style="display: none;">
+            <div class="no-data-content">
+                <div class="no-data-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="no-data-title">No Data Found</h3>
+                <p class="no-data-message">
+                    No student data available for the selected department and batch.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/report.js"></script>
+</body>
+</html>

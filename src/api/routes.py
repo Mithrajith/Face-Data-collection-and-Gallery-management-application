@@ -29,7 +29,7 @@ from ml.gallery_operations import create_gallery, update_gallery, create_gallery
 from ml.embeddings import load_model, extract_embedding
 from quality_checker import VideoQualityChecker
 from services.auth_service import authenticate_user, add_admin_user, delete_admin_user, list_admin_users
-
+from database.models import get_students_by_dept_and_batch
 # Global quality checker instance
 DEFAULT_QUALITY_CHECKER = None
 
@@ -127,6 +127,10 @@ def create_app() -> FastAPI:
     async def serve_admin():
         """Serve the admin page"""
         return FileResponse(os.path.join("static", "admin.html"))
+
+    @app.get("/report", response_class=FileResponse)
+    async def report():
+        return FileResponse(os.path.join("static", "report.html"))  
 
     @app.get("/batches", summary="Get available batch years and departments")
     async def get_batches():
@@ -698,6 +702,12 @@ def create_app() -> FastAPI:
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error processing students: {str(e)}")
 
+    @app.get("/student-list/{dept}/{year}")
+    async def get_students_by_department_year(dept: int, year: str):
+        """Get list of students in a specific department and year"""
+        students = get_students_by_dept_and_batch(dept, year)
+        return students
+    
     # Admin authentication routes
     @app.post('/api/login')
     async def login(data: dict):

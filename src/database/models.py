@@ -40,7 +40,21 @@ def init_db():
             FOREIGN KEY (department_id) REFERENCES departments (id)
         )
         ''')
-        
+
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS students (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,    
+            register_no BIGINT,
+            name TEXT,
+            dob DATE,
+            department_id INT,
+            department TEXT,
+            batch TEXT,
+            regulation TEXT,
+            semester TEXT
+        )
+        ''')
+
         # Insert default data if tables are empty
         cursor.execute("SELECT COUNT(*) FROM batch_years")
         if cursor.fetchone()[0] == 0:
@@ -293,3 +307,11 @@ def get_database_stats() -> Dict[str, Any]:
 
 # Initialize the database when the module is imported
 init_db()
+
+def get_students_by_dept_and_batch(dept: str, batch: str):
+    """Get all students from the database."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM students WHERE department_id = ? AND batch = ?", (dept, batch))
+        print('[DEBUG] Executing query to get students by department and batch:', dept, batch)
+        return [dict(row) for row in cursor.fetchall()]
