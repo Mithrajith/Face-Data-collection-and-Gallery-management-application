@@ -18,6 +18,8 @@ echo -e "${BLUE}Creating required directories...${NC}"
 mkdir -p gallery/data
 mkdir -p gallery/galleries
 mkdir -p logs
+mkdir -p backups/database
+mkdir -p backups/student_data
 
 # Creating python virtual environment
 echo -e "${BLUE}Creating Python virtual environment...${NC}"

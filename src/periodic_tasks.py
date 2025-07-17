@@ -3,6 +3,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from quality_checker import VideoQualityChecker
 from config.settings import STUDENT_DATA_DIR, DEFAULT_YOLO_PATH
 from services.student_data_service import get_student_data_folders
+from database_backup import run_backup
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -40,3 +41,4 @@ def run_periodic_quality_checks():
 # Initialize the scheduler
 scheduler = BackgroundScheduler(daemon=True)
 scheduler.add_job(run_periodic_quality_checks, 'interval', hours=2)
+scheduler.add_job(run_backup, 'cron', hour=16, minute=35)
