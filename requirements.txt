@@ -1,11 +1,11 @@
 albumentations
 fastapi
-Flask
+Flask   
 flask_cors
 asgiref
 numpy
-opencv-python
-opencv-python-headless
+opencv_python
+opencv_python_headless
 pandas
 Pillow
 psutil
@@ -17,7 +17,7 @@ torchvision
 tqdm
 ultralytics
 uvicorn
-gunicorn
+uvicorn[standard]
+gunicorn 
 rich
 python-multipart
-apscheduler
