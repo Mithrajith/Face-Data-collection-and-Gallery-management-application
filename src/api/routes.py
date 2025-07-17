@@ -604,6 +604,124 @@ def create_app() -> FastAPI:
         folders = get_student_data_folders()
         return {"folders": folders}
 
+    @app.get("/student-data/total-stats", summary="Get total statistics across all student data")
+    async def get_total_student_stats():
+        """Get aggregated statistics for all students across all departments and years"""
+        try:
+            folders = get_student_data_folders()
+            total_stats = {
+                "total_students": 0,
+                "total_videos_uploaded": 0,
+                "total_processed": 0,
+                "total_pending": 0,
+                "folders_count": len(folders),
+                "departments": set(),
+                "years": set()
+            }
+            
+            for folder_info in folders:
+                try:
+                    dept = folder_info["dept"]
+                    year = folder_info["year"]
+                    
+                    # Add to unique sets
+                    total_stats["departments"].add(dept)
+                    total_stats["years"].add(year)
+                    
+                    # Get summary for this folder
+                    summary = get_student_data_summary(dept, year)
+                    total_stats["total_students"] += summary.total_students
+                    total_stats["total_videos_uploaded"] += summary.students_with_video
+                    total_stats["total_processed"] += summary.students_processed
+                    total_stats["total_pending"] += summary.students_pending
+                    
+                except Exception as e:
+                    print(f"Error getting stats for {folder_info}: {e}")
+                    continue
+            
+            # Convert sets to lists for JSON serialization
+            total_stats["departments"] = list(total_stats["departments"])
+            total_stats["years"] = list(total_stats["years"])
+            
+            return {
+                "success": True,
+                "data": total_stats
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error calculating total stats: {str(e)}")
+
+    @app.get("/student-data/department-stats", summary="Get department-wise student statistics")
+    async def get_department_wise_stats():
+        """Get aggregated statistics for each department across all years"""
+        try:
+            # Get all departments from database
+            departments = database.get_departments()
+            
+            # Get all student data folders
+            folders = get_student_data_folders()
+            
+            # Create department statistics dict
+            dept_stats = {}
+            
+            # Initialize all departments with zero counts
+            for dept in departments:
+                dept_id = dept["id"]
+                dept_name = dept["name"]
+                dept_stats[dept_id] = {
+                    "department_id": dept_id,
+                    "department_name": dept_name,
+                    "total_students": 0,
+                    "total_videos_uploaded": 0,
+                    "total_processed": 0,
+                    "years": []
+                }
+            
+            # Aggregate data from student folders
+            for folder_info in folders:
+                try:
+                    dept_id = folder_info["dept"]
+                    year = folder_info["year"]
+                    
+                    # Get summary for this folder
+                    summary = get_student_data_summary(dept_id, year)
+                    
+                    # Add to department stats if department exists
+                    if dept_id in dept_stats:
+                        dept_stats[dept_id]["total_students"] += summary.total_students
+                        dept_stats[dept_id]["total_videos_uploaded"] += summary.students_with_video
+                        dept_stats[dept_id]["total_processed"] += summary.students_processed
+                        dept_stats[dept_id]["years"].append(year)
+                    else:
+                        # Handle departments not in database but have data folders
+                        dept_stats[dept_id] = {
+                            "department_id": dept_id,
+                            "department_name": f"Department {dept_id}",
+                            "total_students": summary.total_students,
+                            "total_videos_uploaded": summary.students_with_video,
+                            "total_processed": summary.students_processed,
+                            "years": [year]
+                        }
+                        
+                except Exception as e:
+                    print(f"Error getting stats for {folder_info}: {e}")
+                    continue
+            
+            # Convert to list and sort by department name
+            department_list = list(dept_stats.values())
+            department_list.sort(key=lambda x: x["department_name"])
+            
+            return {
+                "success": True,
+                "data": {
+                    "departments": department_list,
+                    "total_departments": len(department_list)
+                }
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error calculating department stats: {str(e)}")
+
     @app.get("/student-data/{dept}/{year}/summary", 
              response_model=StudentDataSummary,
              summary="Get summary of students in a department-year")

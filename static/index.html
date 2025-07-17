@@ -100,6 +100,166 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Department Table Enhancements */
+        .dept-stats-container {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dept-stats-container:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .dept-stats-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-bottom: none;
+        }
+
+        .dept-stats-header h3 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .dept-stats-header .btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .dept-stats-header .btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .dept-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        .dept-table {
+            margin: 0;
+            border: none;
+        }
+
+        .dept-table thead th {
+            background: #f8f9fa;
+            border: none;
+            color: #495057;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 20px 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .dept-table tbody td {
+            border: none;
+            padding: 20px 25px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .dept-table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .dept-table tbody tr:hover {
+            background: #f8f9ff;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .dept-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        .dept-id {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .dept-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 60px;
+            justify-content: center;
+        }
+
+        .dept-badge-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .dept-badge-success {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+            box-shadow: 0 2px 8px rgba(86, 171, 47, 0.3);
+        }
+
+        .dept-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .dept-stats-footer {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .loading-row td {
+            text-align: center;
+            padding: 40px 25px !important;
+            color: #6c757d;
+        }
+
+        .error-row td {
+            text-align: center;
+            padding: 40px 25px !important;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 40px 25px !important;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
@@ -244,6 +404,49 @@
                 </div>
             </div>
 
+            <!-- Department Statistics Table -->
+            <div class="dept-stats-container mt-5">
+                <div class="dept-stats-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-building me-2"></i>Department Statistics
+                        </h3>
+                        <button id="refreshDeptStats" class="btn btn-sm">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="dept-table-container">
+                    <table class="table dept-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <i class="fas fa-building me-2"></i>Department
+                                </th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-users me-2"></i>Total Students
+                                </th>
+                                <th scope="col" class="text-center">
+                                    <i class="fas fa-video me-2"></i>Videos Uploaded
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentStatsTableBody">
+                            <tr class="loading-row">
+                                <td colspan="3">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>Loading department statistics...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="departmentStatsFooter" class="dept-stats-footer" style="display: none;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Showing <span id="visibleDepts">0</span> 
+                </div>
+            </div>
  
     </div>
     
@@ -280,7 +483,7 @@
         // Dashboard statistics functionality
         async function loadDashboardStats() {
             try {
-                // Try to use a single dashboard endpoint if available, otherwise aggregate from multiple endpoints
+                // Initialize stats object
                 let stats = {
                     totalStudents: 0,
                     videosUploaded: 0,
@@ -288,35 +491,42 @@
                     storageUsed: '0.0'
                 };
 
-                // Load database stats and galleries
-                const [dbStats, galleries] = await Promise.all([
-                    fetch('/database/stats').then(r => r.json()).catch(() => ({})),
+                // Use the new total stats endpoint for student data
+                const [studentStats, galleries] = await Promise.all([
+                    fetch('/student-data/total-stats').then(r => r.json()).catch(() => ({success: false, data: {}})),
                     fetch('/galleries').then(r => r.json()).catch(() => ({galleries: []}))
                 ]);
 
+                // Get student data from new endpoint
+                if (studentStats.success && studentStats.data) {
+                    stats.totalStudents = studentStats.data.total_students || 0;
+                    stats.videosUploaded = studentStats.data.total_videos_uploaded || 0;
+                    console.log('Student stats loaded:', studentStats.data);
+                } else {
+                    console.warn('Failed to load student stats from new endpoint, trying fallback...');
+                    // Fallback to old method if new endpoint fails
+                    try {
+                        const studentFolders = await fetch('/student-data/folders').then(r => r.json());
+                        
+                        // Aggregate student data from all folders
+                        for (const folder of studentFolders.folders || []) {
+                            const dept = folder.dept;
+                            const year = folder.year;
+                            try {
+                                const summary = await fetch(`/student-data/${dept}/${year}/summary`).then(r => r.json());
+                                stats.totalStudents += summary.total_students || 0;
+                                stats.videosUploaded += summary.students_with_video || 0;
+                            } catch (e) {
+                                console.warn(`Failed to get stats for ${dept}_${year}:`, e);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Fallback method also failed:', e);
+                    }
+                }
+
                 // Get ML models count
                 stats.mlModels = galleries.galleries?.length || 0;
-
-                // Try to get student data
-                try {
-                    const studentFolders = await fetch('/student-data/folders').then(r => r.json());
-                    
-                    // Aggregate student data from all folders
-                    for (const folder of studentFolders.folders || []) {
-                        const [dept, year] = folder.split('_');
-                        try {
-                            const summary = await fetch(`/student-data/${dept}/${year}/summary`).then(r => r.json());
-                            stats.totalStudents += summary.totalStudents || 0;
-                            stats.videosUploaded += summary.studentsWithVideo || 0;
-                        } catch (e) {
-                            console.warn(`Failed to get stats for ${folder}:`, e);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Failed to get student data stats:', e);
-                    // Fallback to database stats if available
-                    stats.totalStudents = dbStats.total_students || 0;
-                }
 
                 // Estimate storage usage
                 stats.storageUsed = await calculateStorageUsage();
@@ -365,6 +575,93 @@
             return num.toLocaleString();
         }
 
+        // Department Statistics functionality
+        async function loadDepartmentStats() {
+            try {
+                const response = await fetch('/student-data/department-stats');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('departmentStatsTableBody');
+                const footer = document.getElementById('departmentStatsFooter');
+                const visibleDepts = document.getElementById('visibleDepts');
+                
+                if (data.success && data.data && data.data.departments) {
+                    const departments = data.data.departments;
+                    
+                    // Clear loading state
+                    tableBody.innerHTML = '';
+                    
+                    if (departments.length === 0) {
+                        tableBody.innerHTML = `
+                            <tr class="empty-row">
+                                <td colspan="3">
+                                    <i class="fas fa-info-circle me-2"></i>No department data available
+                                </td>
+                            </tr>
+                        `;
+                        footer.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Populate table with department data
+                    departments.forEach((dept, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="dept-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <div>
+                                        <div class="dept-name">${dept.department_name}</div>
+                                        <div class="dept-id">ID: ${dept.department_id}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="dept-badge dept-badge-primary">
+                                    ${formatNumber(dept.total_students)}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="dept-badge dept-badge-success">
+                                    ${formatNumber(dept.total_videos_uploaded)}
+                                </span>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // Update footer
+                    visibleDepts.textContent = departments.length;
+                    footer.style.display = departments.length > 6 ? 'block' : 'none';
+                    
+                } else {
+                    // Error state
+                    tableBody.innerHTML = `
+                        <tr class="error-row">
+                            <td colspan="3">
+                                <i class="fas fa-exclamation-triangle me-2 text-danger"></i>Failed to load department statistics
+                            </td>
+                        </tr>
+                    `;
+                    footer.style.display = 'none';
+                }
+                
+            } catch (error) {
+                console.error('Error loading department stats:', error);
+                const tableBody = document.getElementById('departmentStatsTableBody');
+                tableBody.innerHTML = `
+                    <tr class="error-row">
+                        <td colspan="3">
+                            <i class="fas fa-exclamation-triangle me-2 text-danger"></i>Error loading department statistics
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('departmentStatsFooter').style.display = 'none';
+            }
+        }
+
         // Logout functionality
         function handleLogout() {
             localStorage.removeItem('userRole');
@@ -378,8 +675,15 @@
                 logoutBtn.addEventListener('click', handleLogout);
             }
 
+            // Setup refresh department stats button
+            var refreshDeptBtn = document.getElementById('refreshDeptStats');
+            if (refreshDeptBtn) {
+                refreshDeptBtn.addEventListener('click', loadDepartmentStats);
+            }
+
             // Load dashboard statistics
             loadDashboardStats();
+            loadDepartmentStats();
 
             // Refresh stats every 30 seconds
             setInterval(loadDashboardStats, 30000);
