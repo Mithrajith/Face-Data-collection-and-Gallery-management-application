@@ -652,8 +652,8 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail=f"Error calculating total stats: {str(e)}")
 
     @app.get("/student-data/department-stats", summary="Get department-wise student statistics")
-    async def get_department_wise_stats():
-        """Get aggregated statistics for each department across all years"""
+    async def get_department_wise_stats(batch: Optional[str] = Query(None, description="Filter by specific batch year")):
+        """Get aggregated statistics for each department across all years or filtered by batch"""
         try:
             # Get all departments from database
             departments = database.get_departments()
@@ -661,10 +661,14 @@ def create_app() -> FastAPI:
             # Get all student data folders
             folders = get_student_data_folders()
             
-            # Create department statistics dict
+            # Filter folders by batch if specified
+            if batch:
+                folders = [f for f in folders if str(f["year"]) == str(batch)]
+            
+            # Create department statistics dict - Initialize ALL departments from database
             dept_stats = {}
             
-            # Initialize all departments with zero counts
+            # Initialize ALL departments from database with zero counts
             for dept in departments:
                 dept_id = dept["id"]
                 dept_name = dept["name"]
@@ -677,7 +681,7 @@ def create_app() -> FastAPI:
                     "years": []
                 }
             
-            # Aggregate data from student folders
+            # Aggregate data from student folders for departments that have data
             for folder_info in folders:
                 try:
                     dept_id = folder_info["dept"]
@@ -686,14 +690,15 @@ def create_app() -> FastAPI:
                     # Get summary for this folder
                     summary = get_student_data_summary(dept_id, year)
                     
-                    # Add to department stats if department exists
+                    # Add to department stats if department exists in our initialized list
                     if dept_id in dept_stats:
                         dept_stats[dept_id]["total_students"] += summary.total_students
                         dept_stats[dept_id]["total_videos_uploaded"] += summary.students_with_video
                         dept_stats[dept_id]["total_processed"] += summary.students_processed
-                        dept_stats[dept_id]["years"].append(year)
+                        if year not in dept_stats[dept_id]["years"]:
+                            dept_stats[dept_id]["years"].append(year)
                     else:
-                        # Handle departments not in database but have data folders
+                        # Handle departments not in database but have data folders (fallback)
                         dept_stats[dept_id] = {
                             "department_id": dept_id,
                             "department_name": f"Department {dept_id}",
@@ -708,14 +713,20 @@ def create_app() -> FastAPI:
                     continue
             
             # Convert to list and sort by department name
+            # Always show ALL departments from database, regardless of having data or not
             department_list = list(dept_stats.values())
             department_list.sort(key=lambda x: x["department_name"])
+            
+            filter_info = f" for batch {batch}" if batch else " (all batches)"
             
             return {
                 "success": True,
                 "data": {
                     "departments": department_list,
-                    "total_departments": len(department_list)
+                    "total_departments": len(department_list),
+                    "filter_applied": batch,
+                    "filter_description": f"Department statistics{filter_info}",
+                    "note": "Showing all departments from database, including those with no student data"
                 }
             }
             
