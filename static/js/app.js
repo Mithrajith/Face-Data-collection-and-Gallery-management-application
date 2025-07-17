@@ -265,59 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const demoErrorToast = document.getElementById('demoErrorToast');
-    if (demoErrorToast) {
-        demoErrorToast.addEventListener('click', function() {
-            showToast('error', 'An error occurred while processing your request.', {
-                title: 'Error',
-                duration: 6000
-            });
-        });
-    }
-    
-    const demoWarningToast = document.getElementById('demoWarningToast');
-    if (demoWarningToast) {
-        demoWarningToast.addEventListener('click', function() {
-            showToast('warning', 'This action might have unintended consequences.', {
-                title: 'Warning',
-                duration: 5500
-            });
-        });
-    }
-    
-    const demoInfoToast = document.getElementById('demoInfoToast');
-    if (demoInfoToast) {
-        demoInfoToast.addEventListener('click', function() {
-            showToast('info', 'The system will be updated tonight at 12:00 AM.', {
-                title: 'Information',
-                duration: 5000
-            });
-        });
-    }
-    
-    const demoCustomToast = document.getElementById('demoCustomToast');
-    if (demoCustomToast) {
-        demoCustomToast.addEventListener('click', function() {
-            // Creating a more complex custom toast notification
-            showToast('info', `
-                <div class="mb-2">Processing complete for all videos.</div>
-                <div class="progress" style="height: 5px">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
-                </div>
-                <div class="d-flex align-items-center justify-content-between mt-2">
-                    <small class="text-light-emphasis">100% Complete</small>
-                    <button class="btn btn-sm btn-light" onclick="activateSection('galleries')">
-                        View Results
-                    </button>
-                </div>
-            `, {
-                title: 'Custom Notification',
-                duration: 8000,
-                timestamp: 'Just now',
-            });
-        });
-    }
-    
     // Add event listener for new student data form
     const selectStudentDataForm = document.getElementById('selectStudentDataForm');
     if (selectStudentDataForm) {
@@ -361,8 +308,6 @@ document.addEventListener('DOMContentLoaded', function() {
             addAdminContainer.style.display = 'none';
             addBatchContainer.className = 'col-md-6';
             addDepartmentContainer.className = 'col-md-6';
-            // // Remove horizontal row layout
-            // adminRow.className = '';
         } else {
             // For superadmin: show all three in a horizontal row
             addAdminContainer.style.display = 'block';

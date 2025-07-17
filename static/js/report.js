@@ -118,27 +118,35 @@ class StudentDataReport {
             
             // Combine the data to create comprehensive student list
             const combinedStudents = [];
+            const processedRegNos = new Set(); // Track processed registration numbers
             
+            // First, process all logged-in students (they have priority)
+            loggedInStudents.forEach(student => {
+                const regNo = student.regNo || student.studentId || student.id;
+                if (!processedRegNos.has(regNo)) {
+                    // Find corresponding database student for additional info
+                    const dbStudent = allStudentsFromDB.find(db => 
+                        (db.regNo || db.studentId || db.id) === regNo
+                    );
+                    
+                    combinedStudents.push({
+                        regNo: regNo,
+                        name: student.name || student.studentName || (dbStudent?.name) || 'Unknown',
+                        status: student.videoUploaded ? 'uploaded' : 'logged_in',
+                        uploaded: student.videoUploaded || false,
+                        facesExtracted: student.facesExtracted || false,
+                        department: (dbStudent?.department) || department,
+                        batch: year
+                    });
+                    processedRegNos.add(regNo);
+                }
+            });
+            
+            // Then, process remaining database students who are not logged in
             if (allStudentsFromDB.length > 0) {
-                // If we have database students, merge with logged-in data
                 allStudentsFromDB.forEach(dbStudent => {
                     const regNo = dbStudent.regNo || dbStudent.studentId || dbStudent.id;
-                    const loggedInStudent = loggedInMap.get(regNo);
-                    
-                    if (loggedInStudent) {
-                        // Student is logged in
-                        combinedStudents.push({
-                            regNo: regNo,
-                            name: loggedInStudent.name || loggedInStudent.studentName || dbStudent.name || 'Unknown',
-                            status: loggedInStudent.videoUploaded ? 'uploaded' : 'logged_in',
-                            uploaded: loggedInStudent.videoUploaded || false,
-                            facesExtracted: loggedInStudent.facesExtracted || false,
-                            department: dbStudent.department || department,
-                            batch: year
-                        });
-                        // Remove from map to track processed students
-                        loggedInMap.delete(regNo);
-                    } else {
+                    if (!processedRegNos.has(regNo)) {
                         // Student is not logged in
                         combinedStudents.push({
                             regNo: regNo,
@@ -149,32 +157,8 @@ class StudentDataReport {
                             department: dbStudent.department || department,
                             batch: year
                         });
+                        processedRegNos.add(regNo);
                     }
-                });
-                
-                // Add any remaining logged in students who might not be in the database
-                loggedInMap.forEach((student, regNo) => {
-                    combinedStudents.push({
-                        regNo: regNo,
-                        name: student.name || student.studentName || 'Unknown',
-                        status: student.videoUploaded ? 'uploaded' : 'logged_in',
-                        uploaded: student.videoUploaded || false,
-                        department: department,
-                        batch: year
-                    });
-                });
-            } else {
-                // If no database students, use only logged-in students
-                loggedInStudents.forEach(student => {
-                    const regNo = student.regNo || student.studentId || student.id;
-                    combinedStudents.push({
-                        regNo: regNo,
-                        name: student.name || student.studentName || 'Unknown',
-                        status: student.videoUploaded ? 'uploaded' : 'logged_in',
-                        uploaded: student.videoUploaded || false,
-                        department: department,
-                        batch: year
-                    });
                 });
             }
             

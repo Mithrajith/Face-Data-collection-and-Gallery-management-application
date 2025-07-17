@@ -832,7 +832,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail=f"Error processing students: {str(e)}")
 
     @app.get("/student-list/{dept}/{year}")
-    async def get_students_by_department_year(dept: int, year: str):
+    async def get_students_by_department_year(dept: str, year: str):
         """Get list of students in a specific department and year"""
         students = get_students_by_dept_and_batch(dept, year)
         return students

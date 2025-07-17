@@ -891,7 +891,7 @@ def get_student_status():
             return jsonify({
                 'success': True,
                 'status': 'processing',
-                'message': 'Waiting for quality check',
+                'message': 'Waiting for quality check. Please check your status after some time to see if any action is needed.',
                 'icon': 'bi-hourglass-split',
                 'color': 'warning'
             })
@@ -907,7 +907,7 @@ def get_student_status():
             return jsonify({
                 'success': True,
                 'status': 'pass',
-                'message': 'Quality check passed - Ready to proceed',
+                'message': 'Quality check passed - No actions needed',
                 'icon': 'bi-check-circle',
                 'color': 'success'
             })
@@ -915,7 +915,7 @@ def get_student_status():
             return jsonify({
                 'success': True,
                 'status': 'failed',
-                'message': 'Video failed quality check - Please try again',
+                'message': 'Video failed on quality check - Please follow the instructions and try again',
                 'icon': 'bi-x-circle',
                 'color': 'danger'
             })
