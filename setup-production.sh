@@ -26,7 +26,7 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-python3 -m venv venv
+python3 -m venv .venv
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to create Python virtual environment. Please check your Python installation.${NC}"
     exit 1
@@ -35,7 +35,7 @@ echo -e "${GREEN}Python virtual environment created successfully.${NC}"
 
 # Activate the virtual environment
 echo -e "${BLUE}Activating Python virtual environment...${NC}"
-source venv/bin/activate
+source .venv/bin/activate
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to activate Python virtual environment. Please check your shell configuration.${NC}"
     exit 1
@@ -151,8 +151,8 @@ fi
 echo -e "${GREEN}Environment variables configured.${NC}"
 
 chmod +x launch.sh
-chmod +x generate_ssl_cert.sh
-./generate_ssl_cert.sh
+chmod +x generate_ssl_certs.sh
+./generate_ssl_certs.sh
 chmod +x data_collection/launch.sh
 
 echo -e "${BOLD}${GREEN}Setup complete! 🎉${NC}"

@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from config.settings import HOST, PORT, WORKERS
 from api.routes import create_app
-from src.periodic_tasks import scheduler
+from periodic_tasks import scheduler
 
 # Create the FastAPI app
 app = create_app()

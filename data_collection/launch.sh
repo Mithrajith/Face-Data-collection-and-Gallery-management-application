@@ -8,19 +8,24 @@ echo "📦 Starting Student Data Collection Application..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Check if virtualenv exists
-if [ ! -d "../venv" ]; then
-    echo "❌ Error: Virtual environment not found at ../venv"
-    echo "ℹ️ Please run setup-production.sh first"
+# Check for virtual environment
+VENV_DIR=""
+if [ -d "../venv" ]; then
+    VENV_DIR="../venv"
+elif [ -d "../.venv" ]; then
+    VENV_DIR="../.venv"
+else
+    echo "❌ Error: Virtual environment not found at ../venv or ../.venv"
+    echo "ℹ️ Please run setup-production.sh from the root directory first"
     exit 1
 fi
 
 # Activate virtual environment
-echo "🔄 Activating virtual environment..."
-source ../venv/bin/activate
+echo "🔄 Activating virtual environment from $VENV_DIR..."
+source "$VENV_DIR/bin/activate"
 
 # Verify activation
-if [[ "$VIRTUAL_ENV" != *"venv" ]]; then
+if [ -z "$VIRTUAL_ENV" ]; then
     echo "❌ Failed to activate virtual environment"
     exit 1
 fi
@@ -29,16 +34,16 @@ echo "✅ Virtual environment activated"
 # Ensure data dir exists
 mkdir -p "../data/student_data"
 
-# Load .env variables
-if [ -f "../../.env" ]; then
-    echo "🔧 Loading environment from .env"
-    source "../../.env"
+# Load .env variables if they exist
+if [ -f "../.env" ]; then
+    echo "🔧 Loading environment from ../.env"
+    export $(grep -v '^#' ../.env | xargs)
 fi
 
 # Default values
-# HOST=${DATA_COLLECTION_HOST:-0.0.0.0}
-# PORT=${DATA_COLLECTION_PORT:-5001}
-# WORKERS=${DATA_COLLECTION_WORKERS:-1}
+HOST=${DATA_COLLECTION_HOST:-0.0.0.0}
+PORT=${DATA_COLLECTION_PORT:-8001}
+WORKERS=${DATA_COLLECTION_WORKERS:-1}
 
 # Locate PM2
 if [ -n "$PM2_EXECUTABLE" ]; then
@@ -84,16 +89,17 @@ import os
 
 console = Console()
 host = os.getenv("DATA_COLLECTION_HOST", "0.0.0.0")
-port = os.getenv("DATA_COLLECTION_PORT", "5001")
+port = os.getenv("DATA_COLLECTION_PORT", "8001")
 workers = os.getenv("DATA_COLLECTION_WORKERS", "1")
 console.print(Panel("Student Data Collection App", style="green"))
-console.print(f"Server URL: http://{host}:{port}", style="cyan")
+console.print(f"Server URL: https://{host}:{port}", style="cyan")
 console.print(f"Workers: {workers}", style="cyan")
 EOF
 
 # Start app
-DATA_COLLECTION_HOST=$HOST DATA_COLLECTION_PORT=$PORT \
-$PM2_CMD start server/app.py --name "data-collection-app" --interpreter python3
+$PM2_CMD start server/app.py --name "data-collection-app" --interpreter python3 -- \
+--host $HOST --port $PORT --workers $WORKERS \
+--ssl-keyfile ../certs/key.pem --ssl-certfile ../certs/cert.pem
 
 # Confirm
 sleep 2

@@ -21,3 +21,5 @@ uvicorn[standard]
 gunicorn 
 rich
 python-multipart
+apscheduler
+python-dotenv

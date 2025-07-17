@@ -5,7 +5,7 @@ from ultralytics import YOLO
 from typing import Dict, List, Tuple, Any
 import json
 from pathlib import Path
-from src.database.models import save_quality_check_report
+from database.models import save_quality_check_report
 
 class VideoQualityChecker:
     def __init__(self, yolo_model_path: str):

@@ -15,19 +15,24 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Check virtual environment
-if [ ! -d "./venv" ]; then
-    echo "❌ Error: Virtual environment not found at ./venv"
+# Check for virtual environment
+VENV_DIR=""
+if [ -d "./venv" ]; then
+    VENV_DIR="./venv"
+elif [ -d "./.venv" ]; then
+    VENV_DIR="./.venv"
+else
+    echo "❌ Error: Virtual environment not found at ./venv or ./.venv"
     echo "ℹ️ Please run ./setup-production.sh first to create the virtual environment"
     exit 1
 fi
 
 # Activate virtual environment
-echo "🔄 Activating virtual environment..."
-source ./venv/bin/activate
+echo "🔄 Activating virtual environment from $VENV_DIR..."
+source "$VENV_DIR/bin/activate"
 
 # Check activation
-if [[ "$VIRTUAL_ENV" != *"venv" ]]; then
+if [ -z "$VIRTUAL_ENV" ]; then
     echo "❌ Error: Failed to activate virtual environment"
     exit 1
 fi
