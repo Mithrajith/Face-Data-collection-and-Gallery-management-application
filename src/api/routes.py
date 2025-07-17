@@ -863,4 +863,22 @@ def create_app() -> FastAPI:
         """List all admin and superadmin users"""
         return list_admin_users()
 
+    # Quality check report routes
+    @app.get("/api/quality-reports", summary="Get all quality check reports")
+    async def get_reports(
+        department: Optional[str] = Query(None),
+        year: Optional[str] = Query(None)
+    ):
+        """Get all quality check reports, optionally filtered by department and year."""
+        reports = database.get_quality_check_reports(department, year)
+        return {"reports": reports}
+
+    @app.get("/api/quality-reports/{report_id}", summary="Get a specific quality check report")
+    async def get_report_details(report_id: int):
+        """Get detailed information for a single quality check report."""
+        report_details = database.get_quality_check_report_details(report_id)
+        if not report_details:
+            raise HTTPException(status_code=404, detail="Report not found")
+        return report_details
+
     return app

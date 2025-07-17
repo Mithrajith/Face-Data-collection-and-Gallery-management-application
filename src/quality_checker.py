@@ -5,6 +5,7 @@ from ultralytics import YOLO
 from typing import Dict, List, Tuple, Any
 import json
 from pathlib import Path
+from src.database.models import save_quality_check_report
 
 class VideoQualityChecker:
     def __init__(self, yolo_model_path: str):
@@ -279,6 +280,11 @@ class VideoQualityChecker:
                 with open(json_path, 'r') as f:
                     student_data = json.load(f)
                 
+                # Skip if quality check has already been done
+                if 'qualityCheck' in student_data:
+                    print(f"  Skipping - quality check already performed")
+                    continue
+                
                 # Skip if already processed (faces extracted)
                 if student_data.get('facesExtracted', False):
                     print(f"  Skipping - already processed")
@@ -328,9 +334,20 @@ class VideoQualityChecker:
         print(f"  Borderline: {len(borderline_students)}")
         print(f"  Failed: {len(failed_students)}")
         
-        return {
+        report = {
+            'department': dept,
+            'year': year,
             'passed_students': passed_students,
             'failed_students': failed_students,
             'borderline_students': borderline_students,
             'total_checked': total_processed
         }
+        
+        # Save the report to the database
+        try:
+            report_id = save_quality_check_report(report)
+            print(f"Successfully saved quality check report with ID: {report_id}")
+        except Exception as e:
+            print(f"Failed to save quality check report to database: {e}")
+            
+        return report

@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 import sqlite3
+import json
 from .connection import get_db_connection
 
 def init_db():
@@ -304,6 +305,94 @@ def get_database_stats() -> Dict[str, Any]:
             "total_identities": total_identities,
             "database_path": DB_PATH
         }
+
+def save_quality_check_report(report_data: Dict[str, Any]) -> int:
+    """Save a quality check report and its results to the database."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # Insert the main report
+        cursor.execute('''
+        INSERT INTO quality_check_reports (department, year, total_checked, passed_count, failed_count, borderline_count)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            report_data['department'],
+            report_data['year'],
+            report_data['total_checked'],
+            len(report_data['passed_students']),
+            len(report_data['failed_students']),
+            len(report_data['borderline_students'])
+        ))
+        report_id = cursor.lastrowid
+        
+        # Insert passed students
+        for student_id in report_data['passed_students']:
+            cursor.execute('''
+            INSERT INTO quality_check_results (report_id, student_id, status)
+            VALUES (?, ?, 'pass')
+            ''', (report_id, student_id))
+            
+        # Insert failed students
+        for student_id in report_data['failed_students']:
+            cursor.execute('''
+            INSERT INTO quality_check_results (report_id, student_id, status)
+            VALUES (?, ?, 'fail')
+            ''', (report_id, student_id))
+            
+        # Insert borderline students
+        for student in report_data['borderline_students']:
+            cursor.execute('''
+            INSERT INTO quality_check_results (report_id, student_id, status, issues)
+            VALUES (?, ?, 'borderline', ?)
+            ''', (report_id, student['regNo'], json.dumps(student['issues'])))
+            
+        conn.commit()
+        return report_id
+
+def get_quality_check_reports(department: Optional[str] = None, year: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Get quality check reports, optionally filtered by department and year."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        query = "SELECT * FROM quality_check_reports"
+        params = []
+        
+        if department or year:
+            query += " WHERE "
+            if department:
+                query += "department = ?"
+                params.append(department)
+            if year:
+                if department:
+                    query += " AND "
+                query += "year = ?"
+                params.append(year)
+        
+        query += " ORDER BY created_at DESC"
+        
+        cursor.execute(query, params)
+        return [dict(row) for row in cursor.fetchall()]
+
+def get_quality_check_report_details(report_id: int) -> Optional[Dict[str, Any]]:
+    """Get a single quality check report and its detailed results."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # Get the main report
+        cursor.execute("SELECT * FROM quality_check_reports WHERE id = ?", (report_id,))
+        report = cursor.fetchone()
+        
+        if not report:
+            return None
+        
+        # Get the detailed results
+        cursor.execute("SELECT * FROM quality_check_results WHERE report_id = ?", (report_id,))
+        results = [dict(row) for row in cursor.fetchall()]
+        
+        report_details = dict(report)
+        report_details['results'] = results
+        
+        return report_details
 
 # Initialize the database when the module is imported
 init_db()
