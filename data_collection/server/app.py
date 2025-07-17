@@ -884,20 +884,26 @@ def get_student_status():
                 'color': 'warning'
             })
         
-        # Check quality check status
-        quality_check = student_data.get('quality_check', {})
+        # Check quality check status - handle both camelCase and lowercase
+        quality_check = student_data.get('qualityCheck') or student_data.get('qualitycheck')
         
         if not quality_check:
             return jsonify({
                 'success': True,
                 'status': 'processing',
-                'message': 'Video uploaded, quality check pending',
+                'message': 'Waiting for quality check',
                 'icon': 'bi-hourglass-split',
                 'color': 'warning'
             })
         
-        # Check if quality check passed
-        if quality_check.get('status') == 'pass' or quality_check.get('passed', False):
+        # Check if quality check passed - handle both string and object format
+        quality_status = None
+        if isinstance(quality_check, str):
+            quality_status = quality_check
+        elif isinstance(quality_check, dict):
+            quality_status = quality_check.get('status')
+        
+        if quality_status == 'pass':
             return jsonify({
                 'success': True,
                 'status': 'pass',
