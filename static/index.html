@@ -101,164 +101,37 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Department Table Enhancements */
-        .dept-stats-container {
-            background: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .dept-stats-container:hover {
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-        }
-
-        .dept-stats-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-bottom: none;
-        }
-
-        .dept-stats-header h3 {
-            margin: 0;
-            font-weight: 700;
-            font-size: 1.4rem;
-        }
-
-        .dept-stats-header .btn {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .dept-stats-header .btn:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .dept-table-container {
-            max-height: 400px;
-            overflow-y: auto;
-            background: #ffffff;
-        }
-
-        .dept-table {
-            margin: 0;
-            border: none;
-        }
-
-        .dept-table thead th {
-            background: #f8f9fa;
-            border: none;
-            color: #495057;
-            font-weight: 600;
-            font-size: 0.9rem;
-            padding: 20px 25px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .dept-table tbody td {
-            border: none;
-            padding: 20px 25px;
-            vertical-align: middle;
-            border-bottom: 1px solid #f1f3f4;
-        }
-
-        .dept-table tbody tr {
-            transition: all 0.3s ease;
-        }
-
-        .dept-table tbody tr:hover {
-            background: #f8f9ff;
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
-        }
-
-        .dept-name {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 1rem;
-        }
-
-        .dept-id {
-            color: #7f8c8d;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-top: 2px;
-        }
-
-        .dept-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            min-width: 60px;
-            justify-content: center;
-        }
-
-        .dept-badge-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        }
-
-        .dept-badge-success {
-            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
-            color: white;
-            box-shadow: 0 2px 8px rgba(86, 171, 47, 0.3);
-        }
-
-        .dept-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: inline-flex;
+        /* Custom feature icon styling to match gallery pages */
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 12px;
-            font-size: 16px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
-        .dept-stats-footer {
-            background: #f8f9fa;
-            padding: 15px 25px;
-            border-top: 1px solid #e9ecef;
-            color: #6c757d;
-            font-size: 0.85rem;
+        /* Department table row styling for consistent height */
+        #departmentStatsTableBody tr {
+            height: 70px;
         }
 
-        .loading-row td {
-            text-align: center;
-            padding: 40px 25px !important;
-            color: #6c757d;
+        /* Scrollbar styling for the table */
+        .table-responsive::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .error-row td {
-            text-align: center;
-            padding: 40px 25px !important;
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
         }
 
-        .empty-row td {
-            text-align: center;
-            padding: 40px 25px !important;
-            color: #6c757d;
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #0dcaf0;
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #0aa2c0;
         }
     </style>
 </head>
@@ -405,46 +278,66 @@
             </div>
 
             <!-- Department Statistics Table -->
-            <div class="dept-stats-container mt-5">
-                <div class="dept-stats-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="mb-0">
-                            <i class="fas fa-building me-2"></i>Department Statistics
-                        </h3>
-                        <button id="refreshDeptStats" class="btn btn-sm">
+            <div class="card shadow-sm border-0 mt-5">
+                <div class="card-header bg-info text-white p-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="feature-icon bg-white text-info rounded-circle p-3 me-3">
+                                <i class="fas fa-building fa-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-1">Department Statistics</h4>
+                                <p class="mb-0 opacity-75"><i class="fas fa-info-circle me-1"></i> Student data overview by department</p>
+                            </div>
+                        </div>
+                        <button id="refreshDeptStats" class="btn btn-outline-light btn-sm">
                             <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
                     </div>
                 </div>
-                
-                <div class="dept-table-container">
-                    <table class="table dept-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">
-                                    <i class="fas fa-building me-2"></i>Department
-                                </th>
-                                <th scope="col" class="text-center">
-                                    <i class="fas fa-users me-2"></i>Total Students
-                                </th>
-                                <th scope="col" class="text-center">
-                                    <i class="fas fa-video me-2"></i>Videos Uploaded
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="departmentStatsTableBody">
-                            <tr class="loading-row">
-                                <td colspan="3">
-                                    <i class="fas fa-spinner fa-spin me-2"></i>Loading department statistics...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div id="departmentStatsFooter" class="dept-stats-footer" style="display: none;">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Showing <span id="visibleDepts">0</span> 
+                <div class="card-body p-4">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th scope="col" class="fw-bold">
+                                        <i class="fas fa-building me-2 text-info"></i>Department
+                                    </th>
+                                    <th scope="col" class="text-center fw-bold">
+                                        <i class="fas fa-users me-2 text-primary"></i>Total Students
+                                    </th>
+                                    <th scope="col" class="text-center fw-bold">
+                                        <i class="fas fa-video me-2 text-success"></i>Videos Uploaded
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="departmentStatsTableBody">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="spinner-border text-info" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-3 text-muted">Loading department statistics...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="departmentStatsFooter" class="bg-light p-3 rounded mt-3" style="display: none;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                <small class="text-muted">
+                                    Showing <span id="visibleDepts" class="fw-bold text-dark">0</span> departments. 
+                                    <span id="scrollHint">Scroll to view more departments.</span>
+                                </small>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-mouse me-1"></i>Scroll inside table to view all
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </div>
  
@@ -593,8 +486,8 @@
                     
                     if (departments.length === 0) {
                         tableBody.innerHTML = `
-                            <tr class="empty-row">
-                                <td colspan="3">
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">
                                     <i class="fas fa-info-circle me-2"></i>No department data available
                                 </td>
                             </tr>
@@ -609,22 +502,22 @@
                         row.innerHTML = `
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="dept-icon">
+                                    <div class="bg-info text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
                                         <i class="fas fa-graduation-cap"></i>
                                     </div>
                                     <div>
-                                        <div class="dept-name">${dept.department_name}</div>
-                                        <div class="dept-id">ID: ${dept.department_id}</div>
+                                        <div class="fw-bold text-dark">${dept.department_name}</div>
+                                        <small class="text-muted">ID: ${dept.department_id}</small>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="dept-badge dept-badge-primary">
+                                <span class="fw-bold text-primary fs-5">
                                     ${formatNumber(dept.total_students)}
                                 </span>
                             </td>
                             <td class="text-center">
-                                <span class="dept-badge dept-badge-success">
+                                <span class="fw-bold text-success fs-5">
                                     ${formatNumber(dept.total_videos_uploaded)}
                                 </span>
                             </td>
@@ -634,14 +527,25 @@
                     
                     // Update footer
                     visibleDepts.textContent = departments.length;
-                    footer.style.display = departments.length > 6 ? 'block' : 'none';
+                    if (departments.length > 0) {
+                        footer.style.display = 'block';
+                        const scrollHint = document.getElementById('scrollHint');
+                        if (departments.length > 5) {
+                            scrollHint.textContent = 'Scroll to view more departments.';
+                        } else {
+                            scrollHint.textContent = 'All departments visible.';
+                        }
+                    } else {
+                        footer.style.display = 'none';
+                    }
                     
                 } else {
                     // Error state
                     tableBody.innerHTML = `
-                        <tr class="error-row">
-                            <td colspan="3">
-                                <i class="fas fa-exclamation-triangle me-2 text-danger"></i>Failed to load department statistics
+                        <tr>
+                            <td colspan="3" class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                                <span class="text-danger">Failed to load department statistics</span>
                             </td>
                         </tr>
                     `;
@@ -652,9 +556,10 @@
                 console.error('Error loading department stats:', error);
                 const tableBody = document.getElementById('departmentStatsTableBody');
                 tableBody.innerHTML = `
-                    <tr class="error-row">
-                        <td colspan="3">
-                            <i class="fas fa-exclamation-triangle me-2 text-danger"></i>Error loading department statistics
+                    <tr>
+                        <td colspan="3" class="text-center py-4">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            <span class="text-danger">Error loading department statistics</span>
                         </td>
                     </tr>
                 `;
