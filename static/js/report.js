@@ -70,17 +70,7 @@ class StudentDataReport {
     // Fetch student data from APIs and merge results
     async fetchStudentDataFromAPI(department, year) {
         try {
-            // Fetch students who have logged in (from collection app data)
-            const loggedInResponse = await fetch(`/student-data/${department}/${year}/students`);
-            
-            if (!loggedInResponse.ok) {
-                throw new Error(`HTTP error! status: ${loggedInResponse.status}`);
-            }
-            
-            const loggedInData = await loggedInResponse.json();
-            const loggedInStudents = loggedInData.students || [];
-            
-            // Try to fetch all students from database (registered students)
+            // Step 1: Fetch all students from database (this is our base list)
             let allStudentsFromDB = [];
             try {
                 const endpoint = `/student-list/${department}/${year}`;
@@ -94,7 +84,7 @@ class StudentDataReport {
                                          (Array.isArray(allStudentsData) ? allStudentsData : []);
                     
                     allStudentsFromDB = studentsArray.map(student => ({
-                        regNo: student.register_no,
+                        regNo: student.register_no || student.regNo || student.studentId || student.id,
                         name: student.name || 'Unknown',
                         departmentId: student.department_id || department,
                         batch: student.batch || year,
@@ -102,80 +92,82 @@ class StudentDataReport {
                         department: student.department || department,
                         dob: student.dob,
                         regulation: student.regulation,
-                        semester: student.semester
+                        semester: student.semester,
+                        // Default status - will be updated based on login/upload data
+                        status: 'not_logged_in',
+                        uploaded: false,
+                        facesExtracted: false
                     }));
                 }
             } catch (dbError) {
-                // Continue with only logged-in students if database fetch fails
+                throw new Error(`Failed to fetch student database: ${dbError.message}`);
             }
             
-            // Create a map of logged in students by reg number for quick lookup
-            const loggedInMap = new Map();
-            loggedInStudents.forEach(student => {
-                const regNo = student.regNo || student.studentId || student.id;
-                loggedInMap.set(regNo, student);
-            });
+            // If no students in database, return empty array
+            if (allStudentsFromDB.length === 0) {
+                return [];
+            }
             
-            // Combine the data to create comprehensive student list
-            const combinedStudents = [];
-            const processedRegNos = new Set(); // Track processed registration numbers
-            
-            // First, process all logged-in students (they have priority)
-            loggedInStudents.forEach(student => {
-                const regNo = student.regNo || student.studentId || student.id;
-                if (!processedRegNos.has(regNo)) {
-                    // Find corresponding database student for additional info
-                    const dbStudent = allStudentsFromDB.find(db => 
-                        (db.regNo || db.studentId || db.id) === regNo
-                    );
+            // Step 2: Fetch login/upload status data and update the status field
+            try {
+                const loggedInResponse = await fetch(`/student-data/${department}/${year}/students`);
+                
+                if (loggedInResponse.ok) {
+                    const loggedInData = await loggedInResponse.json();
+                    const loggedInStudents = loggedInData.students || [];
                     
-                    combinedStudents.push({
-                        regNo: regNo,
-                        name: student.name || student.studentName || (dbStudent?.name) || 'Unknown',
-                        status: student.videoUploaded ? 'uploaded' : 'logged_in',
-                        uploaded: student.videoUploaded || false,
-                        facesExtracted: student.facesExtracted || false,
-                        department: (dbStudent?.department) || department,
-                        batch: year
+                    // Create a map for quick lookup by regNo
+                    const statusMap = new Map();
+                    loggedInStudents.forEach(student => {
+                        const regNo = student.regNo || student.studentId || student.id;
+                        if (regNo) {
+                            statusMap.set(String(regNo), {
+                                videoUploaded: Boolean(student.videoUploaded),
+                                facesExtracted: Boolean(student.facesExtracted),
+                                name: student.name || student.studentName
+                            });
+                        }
                     });
-                    processedRegNos.add(regNo);
+                    
+                    // Update status for each student based on login/upload data
+                    allStudentsFromDB.forEach(student => {
+                        const regNo = String(student.regNo || '');
+                        const statusData = statusMap.get(regNo);
+                        
+                        if (statusData) {
+                            // Student has logged in - update status based on upload boolean
+                            student.status = statusData.videoUploaded ? 'uploaded' : 'logged_in';
+                            student.uploaded = statusData.videoUploaded;
+                            student.facesExtracted = statusData.facesExtracted;
+                            // Prefer name from login data if available
+                            if (statusData.name) {
+                                student.name = statusData.name;
+                            }
+                        }
+                        // If no statusData found, student remains with default 'not_logged_in' status
+                    });
                 }
-            });
-            
-            // Then, process remaining database students who are not logged in
-            if (allStudentsFromDB.length > 0) {
-                allStudentsFromDB.forEach(dbStudent => {
-                    const regNo = dbStudent.regNo || dbStudent.studentId || dbStudent.id;
-                    if (!processedRegNos.has(regNo)) {
-                        // Student is not logged in
-                        combinedStudents.push({
-                            regNo: regNo,
-                            name: dbStudent.name || dbStudent.studentName || 'Unknown',
-                            status: 'not_logged_in',
-                            uploaded: false,
-                            facesExtracted: false,
-                            department: dbStudent.department || department,
-                            batch: year
-                        });
-                        processedRegNos.add(regNo);
-                    }
-                });
+            } catch (loginError) {
+                // Continue with default status if login endpoint fails
+                console.warn('Failed to fetch login data:', loginError);
             }
             
-            // Sort by registration number
-            combinedStudents.sort((a, b) => {
-                const regA = String(a.regNo || '');
-                const regB = String(b.regNo || '');
-                return regA.localeCompare(regB);
-            });
+            // Step 3: Filter out invalid students and sort
+            const validStudents = allStudentsFromDB
+                .filter(student => student.regNo && String(student.regNo).trim() !== '')
+                .sort((a, b) => {
+                    const regA = String(a.regNo || '');
+                    const regB = String(b.regNo || '');
+                    return regA.localeCompare(regB);
+                });
             
             // Cache the data
             if (!this.studentDatabase[department]) {
                 this.studentDatabase[department] = {};
             }
-            this.studentDatabase[department][year] = combinedStudents;
+            this.studentDatabase[department][year] = validStudents;
             
-            return combinedStudents;
+            return validStudents;
             
         } catch (error) {
             throw error;
@@ -377,6 +369,7 @@ class StudentDataReport {
         
         try {
             // Get students data (from cache or API)
+            let students;
             if (this.studentDatabase[department] && this.studentDatabase[department][batch]) {
                 students = this.studentDatabase[department][batch];
             } else {

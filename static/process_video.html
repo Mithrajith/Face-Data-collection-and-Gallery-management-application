@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Recognition Gallery Manager</title>
-    <link favicon rel="icon" href="/static/images/gallery.png" type="image/x-icon">
+    <title>Face Recognition - Face Recognition Gallery Manager</title>
+    <link rel="icon" href="/static/images/gallery.png" type="image/x-icon">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
@@ -18,73 +19,11 @@
     <link rel="stylesheet" href="/static/css/toast.css?v=1.1">
 </head>
 <body>
-    <!-- Enhanced Header Component -->
-    <header class="header">
-        <div class="header-container d-flex justify-content-between align-items-center">
-            <div class="nba">
-                <img src="/static/images/image.png" class="nba-logo" alt="College Logo">
-            </div>
-            <div class="college-info flex-grow-1 text-center">
-                <h1>SRI SHAKTHI INSTITUTE OF ENGINEERING AND TECHNOLOGY</h1>
-            </div>
-            <div class="logout-container ms-auto">
-                <button id="logoutBtn" class="btn btn-outline-danger btn-lg" type="button"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
-            </div>
-        </div>
-    </header>
+   <!-- Common Header -->
+    <div id="common-header"></div>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom custom-navbar">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <i class="fas fa-user-circle me-2 text-primary fs-4"></i>
-                <span class="fw-bold text-primary">Face Recognition Gallery</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">
-                            <i class="fas fa-home me-1"></i> Home
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link active" href="/process_video">
-                            <i class="fas fa-video me-1"></i> Process Videos
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/create_gallery">
-                            <i class="fas fa-database me-1"></i> Create Galleries
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/view_gallery">
-                            <i class="fas fa-images me-1"></i> View Galleries
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/face_reg">
-                            <i class="fas fa-user-check me-1"></i> Face Recognition
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin">
-                            <i class="fas fa-cog me-1"></i> Admin
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Common Navigation -->
+    <div id="common-nav"></div>
 
     <!-- Main Content -->
     <div class="bg-light p-5 rounded shadow-sm">
@@ -232,49 +171,16 @@
         </div>
     </div>
 
-    <!-- Enhanced Footer -->
-    <footer class="footer bg-gradient mt-5 py-4" style="background-color: #f8f9fa; border-top: 1px solid rgba(0,0,0,0.05);bottom:0;">
-                        <div class="container py-4">
-<div class="row align-items-center">
-                <div class="col-md-4 mb-3 mb-md-0">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-user-circle text-primary fa-2x me-3"></i>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Face Recognition</h5>
-                            <p class="mb-0 text-muted small">Gallery Manager</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-3 mb-md-0 text-center">
-                </div>
-                <div class="col-md-4 text-md-end">
-                    <p class="mb-0">
-                        <span class="text-muted">Designed & Developed by</span>
-                        <span class="fw-medium ms-1"><a href="/about" style="list-style: none;">AI & ML Students</a></span>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- Common Footer -->
+    <div id="common-footer"></div>
+    
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
+    <!-- Common Layout Components -->
+    <script src="/static/js/common-layout.js"></script>
+    
     <!-- Custom JavaScript -->
     <script src="/static/js/app.js?v=1.1"></script>
-    <script>
-        // Attach logout functionality directly here to guarantee it works
-        (function() {
-            function handleLogout() {
-                localStorage.removeItem('userRole');
-                window.location.href = '/login';
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                var logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', handleLogout);
-                }
-            });
-        })();
-    </script>
 </body>
 </html>
