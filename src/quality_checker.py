@@ -99,7 +99,7 @@ class VideoQualityChecker:
                 'error': 'Video file not found',
                 'details': {}
             }
-        
+
         # Sample 15 frames from the video
         frames = self.sample_frames(video_path, 15)
         if not frames:
@@ -109,7 +109,7 @@ class VideoQualityChecker:
                 'error': 'Could not extract frames from video',
                 'details': {}
             }
-        
+
         # Initialize quality metrics
         total_faces = 0
         multiple_faces_count = 0
@@ -117,20 +117,32 @@ class VideoQualityChecker:
         contrast_scores = []
         motion_blur_scores = []
         faces_data = []
-        
+        problem_flags = []  # For UI display: all detected problems per frame
+        multiple_faces_critical = False  # If any frame has multiple faces
+
         # Process each sampled frame
-        for frame in frames:
+        for frame_idx, frame in enumerate(frames):
             # Detect faces
             results = self.yolo_model(frame, conf=0.7)
             frame_faces = 0
-            
+            frame_flags = []
+
             if len(results) > 0 and hasattr(results[0], 'boxes') and len(results[0].boxes) > 0:
                 frame_faces = len(results[0].boxes)
                 total_faces += frame_faces
-                
+
                 if frame_faces > 1:
                     multiple_faces_count += 1
-                
+                    multiple_faces_critical = True
+                    frame_flags.append("Multiple faces detected (critical fail)")
+                    # Save all flags for this frame (for UI display)
+                    if frame_flags:
+                        problem_flags.append({
+                            'frame': frame_idx,
+                            'flags': frame_flags
+                        })
+                    break  # Stop further processing if critical failg
+
                 # Store face data for angle detection
                 for box in results[0].boxes:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -140,58 +152,75 @@ class VideoQualityChecker:
                         'bbox': (x1, y1, x2, y2),
                         'size': max(face_width, face_height)
                     })
-            
+            else:
+                frame_flags.append("No face detected")
+
             # Check blur
             blur_score = self.detect_blur(frame)
             blur_scores.append(blur_score)
-            
+            if blur_score < self.quality_thresholds['min_blur_score']:
+                frame_flags.append("Blurry frame")
+
             # Check contrast
             contrast_score = self.check_contrast(frame)
             contrast_scores.append(contrast_score)
-            
+            if contrast_score < self.quality_thresholds['min_contrast']:
+                frame_flags.append("Low contrast")
+
             # Check motion blur
             motion_blur_score = self.detect_motion_blur(frame)
             motion_blur_scores.append(motion_blur_score)
-        
+            if motion_blur_score > self.quality_thresholds['max_motion_blur']:
+                frame_flags.append("Motion blur detected")
+
+            # Save all flags for this frame (for UI display)
+            if frame_flags:
+                problem_flags.append({
+                    'frame': frame_idx,
+                    'flags': frame_flags
+                })
+            # Continue to next frame unless break was triggered above
+
         # Calculate metrics
         avg_blur = np.mean(blur_scores) if blur_scores else 0
         avg_contrast = np.mean(contrast_scores) if contrast_scores else 0
         avg_motion_blur = np.mean(motion_blur_scores) if motion_blur_scores else 0
         face_angles = self.detect_face_angles(faces_data)
         avg_face_size = np.mean([f['size'] for f in faces_data]) if faces_data else 0
-        
+
         # Quality checks - categorize issues
         critical_issues = []
         major_issues = []
         minor_issues = []
-        
+
         # Critical issues (auto-fail)
         if total_faces < 3:
             critical_issues.append("No face detected or very few faces")
-        
-        if multiple_faces_count >= 8:  # More than half the frames have multiple people
-            critical_issues.append("Multiple people detected in most frames")
-        
+
+        # If any frame has multiple faces, flag as critical fail
+        if multiple_faces_critical:
+            critical_issues.append("Multiple faces detected in at least one frame (critical fail)")
+
         # Major issues
         if avg_blur < self.quality_thresholds['min_blur_score']:
             major_issues.append(f"Video too blurry")
-        
+
         if avg_contrast < self.quality_thresholds['min_contrast']:
             major_issues.append(f"Poor lighting/contrast")
-        
+
         if avg_face_size < self.quality_thresholds['min_face_size']:
             major_issues.append(f"Face too small in frame")
-        
+
         # Minor issues
         if face_angles < self.quality_thresholds['min_face_angles']:
             minor_issues.append(f"Limited face angles")
-        
-        if multiple_faces_count > 0 and multiple_faces_count < 8:
+
+        if multiple_faces_count > 0 and not multiple_faces_critical:
             minor_issues.append(f"Multiple people in some frames")
-        
+
         if avg_motion_blur > self.quality_thresholds['max_motion_blur']:
             minor_issues.append(f"Some motion blur detected")
-        
+
         # Determine category
         if critical_issues:
             category = 'fail'
@@ -201,9 +230,9 @@ class VideoQualityChecker:
             category = 'borderline'
         else:
             category = 'pass'
-        
+
         all_issues = critical_issues + major_issues + minor_issues
-        
+
         return {
             'overall_quality': 'pass' if category == 'pass' else 'fail',
             'category': category,
@@ -219,7 +248,8 @@ class VideoQualityChecker:
                 'avg_motion_blur': avg_motion_blur,
                 'face_angles': face_angles,
                 'avg_face_size': avg_face_size,
-                'frames_analyzed': len(frames)
+                'frames_analyzed': len(frames),
+                'problem_flags': problem_flags  # For UI: all frame-level problem flags
             }
         }
     
