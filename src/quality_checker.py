@@ -16,7 +16,7 @@ class VideoQualityChecker:
             'max_faces_per_frame': 1,  # Maximum faces per frame (to avoid multiple people)
             'min_blur_score': 50,  # Minimum blur score (generous threshold)
             'min_contrast': 20,  # Minimum contrast (generous threshold)
-            'min_face_angles': 2,  # Minimum different face angles/poses
+            'min_face_angles': 1,  # Minimum different face angles/poses
             'min_face_size': 60,  # Minimum face size (pixels)
             'max_motion_blur': 80,  # Maximum motion blur threshold (generous)
         }
@@ -121,7 +121,7 @@ class VideoQualityChecker:
         # Process each sampled frame
         for frame in frames:
             # Detect faces
-            results = self.yolo_model(frame, conf=0.5)
+            results = self.yolo_model(frame, conf=0.7)
             frame_faces = 0
             
             if len(results) > 0 and hasattr(results[0], 'boxes') and len(results[0].boxes) > 0:
@@ -280,15 +280,15 @@ class VideoQualityChecker:
                 with open(json_path, 'r') as f:
                     student_data = json.load(f)
                 
-                # Skip if quality check has already been done
+                # Allow re-checking quality even if already done
                 if 'qualityCheck' in student_data:
-                    print(f"  Skipping - quality check already performed")
-                    continue
+                    print(f"  Re-checking quality (was: {student_data['qualityCheck']})")
+                else:
+                    print(f"  First time quality check")
                 
-                # Skip if already processed (faces extracted)
+                # Allow quality check even on processed students
                 if student_data.get('facesExtracted', False):
-                    print(f"  Skipping - already processed")
-                    continue
+                    print(f"  Quality checking already processed student")
                 
                 print(f"  Processing quality check for {student_id}")
                 

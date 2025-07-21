@@ -2341,6 +2341,9 @@ async function handleLoadStudentData(event) {
         // Store selected data
         window.currentStudentData = { dept: department, year: year };
 
+        // Check for existing quality check results
+        await loadExistingQualityResults(department, year);
+
     } catch (error) {
         console.error("Error loading student data:", error);
         showAlert('error', error.message);
@@ -2350,6 +2353,98 @@ async function handleLoadStudentData(event) {
             btnLoad.disabled = false;
             btnLoad.innerHTML = '<i class="fas fa-search me-2"></i>Load Student Data';
         }
+    }
+}
+
+// Load existing quality check results for the department and year
+async function loadExistingQualityResults(dept, year) {
+    try {
+        console.log(`Loading existing quality results for ${dept} ${year}`);
+        
+        // Fetch quality check reports for the department and year
+        const response = await fetch(`${API_BASE_URL}/api/quality-reports?department=${dept}&year=${year}`);
+        
+        if (!response.ok) {
+            console.log("No existing quality reports found or error fetching reports");
+            return;
+        }
+        
+        const data = await response.json();
+        console.log("Quality reports response:", data);
+        
+        if (!data.reports || data.reports.length === 0) {
+            console.log("No quality reports found for this department and year");
+            return;
+        }
+        
+        // Get the most recent report
+        const latestReport = data.reports[data.reports.length - 1];
+        console.log("Latest quality report:", latestReport);
+        
+        // Fetch detailed results for the latest report
+        const detailResponse = await fetch(`${API_BASE_URL}/api/quality-reports/${latestReport.id}`);
+        
+        if (!detailResponse.ok) {
+            console.log("Error fetching detailed quality report");
+            return;
+        }
+        
+        const detailData = await detailResponse.json();
+        console.log("Detailed quality report:", detailData);
+        
+        // Convert database format to expected format for display
+        const qualityResult = {
+            passed_students: [],
+            failed_students: [],
+            borderline_students: [],
+            total_checked: detailData.results.length,
+            pass_rate: 0
+        };
+        
+        // Process the results
+        detailData.results.forEach(result => {
+            if (result.status === 'pass') {
+                qualityResult.passed_students.push(result.student_id);
+            } else if (result.status === 'fail') {
+                qualityResult.failed_students.push(result.student_id);
+            } else if (result.status === 'borderline') {
+                qualityResult.borderline_students.push({
+                    regNo: result.student_id,
+                    issues: result.issues ? result.issues.split(', ') : []
+                });
+            }
+        });
+        
+        // Calculate pass rate
+        if (qualityResult.total_checked > 0) {
+            qualityResult.pass_rate = (qualityResult.passed_students.length / qualityResult.total_checked) * 100;
+        }
+        
+        console.log("Processed quality result:", qualityResult);
+        
+        // Store results globally
+        window.qualityCheckResults = qualityResult;
+        
+        // Show the quality results section
+        const qualityResultsSection = document.getElementById('qualityCheckResults');
+        if (qualityResultsSection) {
+            qualityResultsSection.style.display = 'block';
+        }
+        
+        // Display the results
+        displayQualityResults(qualityResult);
+        
+        // Update the quality check button text to indicate re-check
+        const btnQualityCheck = document.getElementById('btnQualityCheck');
+        if (btnQualityCheck) {
+            btnQualityCheck.innerHTML = '<i class="fas fa-shield-alt me-2"></i>Re-check Quality';
+        }
+        
+        console.log("Successfully loaded and displayed existing quality results");
+        
+    } catch (error) {
+        console.error("Error loading existing quality results:", error);
+        // Don't show error to user, just continue without past results
     }
 }
 
@@ -2618,11 +2713,78 @@ function displayQualityResults(result) {
     }
     
     // Update process button to show only quality-passed students
+    updateProcessButtonBasedOnCurrentStatus(result);
+}
+
+// Update process button based on current student processing status
+async function updateProcessButtonBasedOnCurrentStatus(qualityResult) {
     const btnProcess = document.getElementById('btnProcessStudentVideos');
-    if (btnProcess) {
-        if (result.passed_students.length > 0) {
+    if (!btnProcess || !window.currentStudentData) {
+        return;
+    }
+    
+    try {
+        // Get current student data summary to check processing status
+        const { dept, year } = window.currentStudentData;
+        const response = await fetch(`${API_BASE_URL}/student-data/${dept}/${year}/summary`);
+        
+        if (response.ok) {
+            const summary = await response.json();
+            
+            // Update the stats display if elements exist
+            const totalStudentsEl = document.getElementById('totalStudents');
+            const studentsWithVideoEl = document.getElementById('studentsWithVideo');
+            const studentsPendingEl = document.getElementById('studentsPending');
+            const studentsProcessedEl = document.getElementById('studentsProcessed');
+            
+            if (totalStudentsEl) totalStudentsEl.textContent = summary.total_students;
+            if (studentsWithVideoEl) studentsWithVideoEl.textContent = summary.students_with_video;
+            if (studentsPendingEl) studentsPendingEl.textContent = summary.students_pending;
+            if (studentsProcessedEl) studentsProcessedEl.textContent = summary.students_processed;
+            
+            // Determine how many students can still be processed
+            const passedStudents = qualityResult ? qualityResult.passed_students.length : 0;
+            const pendingStudents = summary.students_pending;
+            
+            if (pendingStudents > 0) {
+                // There are students that can still be processed
+                btnProcess.disabled = false;
+                btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${pendingStudents} Pending Videos`;
+                btnProcess.classList.remove('btn-secondary');
+                btnProcess.classList.add('btn-success');
+            } else if (passedStudents > 0 && pendingStudents === 0) {
+                // All quality-passed students have been processed
+                btnProcess.disabled = true;
+                btnProcess.innerHTML = '<i class="fas fa-check me-2"></i>All Quality-Passed Videos Processed';
+                btnProcess.classList.remove('btn-success');
+                btnProcess.classList.add('btn-secondary');
+            } else {
+                // No students passed quality or no pending students
+                btnProcess.disabled = true;
+                btnProcess.innerHTML = '<i class="fas fa-cog me-2"></i>No Videos to Process';
+                btnProcess.classList.remove('btn-success');
+                btnProcess.classList.add('btn-secondary');
+            }
+        } else {
+            // Fallback to original logic if summary fetch fails
+            if (qualityResult && qualityResult.passed_students.length > 0) {
+                btnProcess.disabled = false;
+                btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${qualityResult.passed_students.length} Quality-Passed Videos`;
+                btnProcess.classList.remove('btn-secondary');
+                btnProcess.classList.add('btn-success');
+            } else {
+                btnProcess.disabled = true;
+                btnProcess.innerHTML = '<i class="fas fa-cog me-2"></i>No Quality-Passed Videos';
+                btnProcess.classList.remove('btn-success');
+                btnProcess.classList.add('btn-secondary');
+            }
+        }
+    } catch (error) {
+        console.error("Error updating process button status:", error);
+        // Fallback to original logic
+        if (qualityResult && qualityResult.passed_students.length > 0) {
             btnProcess.disabled = false;
-            btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${result.passed_students.length} Quality-Passed Videos`;
+            btnProcess.innerHTML = `<i class="fas fa-cog me-2"></i>Process ${qualityResult.passed_students.length} Quality-Passed Videos`;
             btnProcess.classList.remove('btn-secondary');
             btnProcess.classList.add('btn-success');
         } else {

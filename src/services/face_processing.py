@@ -19,6 +19,10 @@ def extract_frames(video_path: str, output_dir: str, max_frames: int = 1000, int
     Returns:
         List of paths to extracted frames
     """
+    print(f"Extracting frames from: {video_path}")
+    print(f"Output directory: {output_dir}")
+    print(f"Max frames: {max_frames}, Interval: {interval}")
+    
     os.makedirs(output_dir, exist_ok=True)
     
     cap = cv2.VideoCapture(video_path)
@@ -26,25 +30,42 @@ def extract_frames(video_path: str, output_dir: str, max_frames: int = 1000, int
         print(f"Error: Could not open video {video_path}")
         return []
     
+    # Get video properties for debugging
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    duration = total_frames / fps if fps > 0 else 0
+    print(f"Video properties: {total_frames} frames, {fps} FPS, {duration:.2f} seconds")
+    
     frame_paths = []
     frame_count = 0
     saved_count = 0
+    max_read_attempts = total_frames + 100  # Safety limit to prevent infinite loops
+    read_attempts = 0
     
-    while saved_count < max_frames:
+    while saved_count < max_frames and read_attempts < max_read_attempts:
         ret, frame = cap.read()
+        read_attempts += 1
+        
         if not ret:
+            print(f"End of video reached at frame {frame_count} (attempt {read_attempts})")
             break
             
         if frame_count % interval == 0:
             # Save frame as image
             frame_path = os.path.join(output_dir, f"frame_{saved_count:03d}.jpg")
-            cv2.imwrite(frame_path, frame)
-            frame_paths.append(frame_path)
-            saved_count += 1
+            success = cv2.imwrite(frame_path, frame)
+            if success:
+                frame_paths.append(frame_path)
+                saved_count += 1
+                if saved_count % 10 == 0:  # Log every 10th frame
+                    print(f"Saved frame {saved_count}/{max_frames}")
+            else:
+                print(f"Failed to save frame {frame_count} to {frame_path}")
             
         frame_count += 1
     
     cap.release()
+    print(f"Frame extraction complete: {len(frame_paths)} frames saved")
     return frame_paths
 
 def detect_and_crop_faces(image_path: str, output_dir: str, yolo_path: str = DEFAULT_YOLO_PATH) -> List[str]:

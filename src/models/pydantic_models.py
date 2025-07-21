@@ -24,6 +24,7 @@ class StudentInfo(BaseModel):
     name: str
     year: str
     dept: str
+    dept_id: str = None  # Department ID for folder structure
     batch: str
     startTime: str
     videoUploaded: bool

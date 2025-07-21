@@ -51,7 +51,13 @@ def get_students_in_folder(dept: str, year: str) -> List[StudentInfo]:
                                 data['year'] = year
                                 
                             if 'dept' not in data:
+                                # If dept is missing, we need to get the department name
+                                # For now, use the dept parameter (which is dept_id) as fallback
                                 data['dept'] = dept
+                                
+                            if 'dept_id' not in data:
+                                # The dept parameter passed to this function is actually the dept_id from the URL
+                                data['dept_id'] = dept
                                 
                             if 'batch' not in data:
                                 data['batch'] = f"{dept}_{year}"
@@ -73,12 +79,15 @@ def get_students_in_folder(dept: str, year: str) -> List[StudentInfo]:
                                 
                             if 'facesCount' not in data:
                                 data['facesCount'] = 0
+                                
+                            if 'qualityCheck' not in data:
+                                data['qualityCheck'] = 'not_tested'
                             
                             # Try to create the StudentInfo object with the fixed data
                             students.append(StudentInfo(**data))
                             
                             # If we had to fix the JSON, save it back to the file
-                            if any(k not in data for k in ['name', 'regNo', 'sessionId', 'year', 'dept', 'batch']):
+                            if any(k not in data for k in ['name', 'regNo', 'sessionId', 'year', 'dept', 'dept_id', 'batch', 'qualityCheck']):
                                 with open(json_file, 'w') as f:
                                     json.dump(data, f, indent=2)
                                     
@@ -109,15 +118,23 @@ def get_student_data_summary(dept: str, year: str) -> StudentDataSummary:
 
 def process_student_video(student: StudentInfo) -> Dict[str, Any]:
     try:
+        print(f"Starting video processing for student: {student.regNo}")
         # Remove psutil for environments where it's not available
         # Source paths (where video is stored)
-        student_source_folder = os.path.join(STUDENT_DATA_DIR, f"{student.dept}_{student.year}", student.regNo)
+        # Use dept_id for folder structure since folders are named with department ID
+        dept_folder = getattr(student, 'dept_id', student.dept)  # Fallback to dept if dept_id not available
+        student_source_folder = os.path.join(STUDENT_DATA_DIR, f"{dept_folder}_{student.year}", student.regNo)
         video_path = os.path.join(student_source_folder, f"{student.regNo}.mp4")
+        
+        print(f"Student dept: {student.dept}, dept_id: {getattr(student, 'dept_id', 'Not set')}")
+        print(f"Using department folder: {dept_folder}")
+        print(f"Looking for video at: {video_path}")
         if not os.path.exists(video_path):
+            print(f"Video file not found: {video_path}")
             return {"success": False, "error": f"Video file not found: {video_path}"}
         
         # Destination paths (gallery data structure)
-        gallery_data_dir = os.path.join(BASE_DATA_DIR, f"{student.dept}_{student.year}")
+        gallery_data_dir = os.path.join(BASE_DATA_DIR, f"{dept_folder}_{student.year}")
         student_gallery_folder = os.path.join(gallery_data_dir, student.regNo)
         
         # Create gallery data directory structure
@@ -128,17 +145,27 @@ def process_student_video(student: StudentInfo) -> Dict[str, Any]:
         os.makedirs(temp_frames_dir, exist_ok=True)
         
         # Extract frames from video
+        print(f"Extracting frames from {video_path} to {temp_frames_dir}")
         frame_paths = extract_frames(video_path, temp_frames_dir)
+        print(f"Extracted {len(frame_paths)} frames")
+        
+        if not frame_paths:
+            print(f"No frames extracted from video: {video_path}")
+            return {"success": False, "error": f"No frames could be extracted from video: {video_path}"}
         
         # Process each frame to extract faces and save them in gallery structure
         all_face_paths = []
-        for frame_path in frame_paths:
+        print(f"Processing {len(frame_paths)} frames for face detection")
+        for i, frame_path in enumerate(frame_paths):
+            print(f"Processing frame {i+1}/{len(frame_paths)}: {frame_path}")
             face_paths = detect_and_crop_faces(frame_path, student_gallery_folder)
+            print(f"Found {len(face_paths)} faces in frame {i+1}")
             all_face_paths.extend(face_paths)
             # Memory cleanup after each frame
             del face_paths
             gc.collect()
         faces_count = len(all_face_paths)  # <-- define before deleting
+        print(f"Total faces extracted for {student.regNo}: {faces_count}")
         
         # Clean up temporary frames directory
         try:
@@ -297,22 +324,32 @@ def process_students_videos(dept: str, year: str) -> Dict[str, Any]:
         # Remove psutil for environments where it's not available
         # ...existing code...
         students = get_students_in_folder(dept, year)
+        print(f"Total students found: {len(students)}")
+        
         pending_students = [s for s in students if s.videoUploaded and not s.facesExtracted]
-        quality_passed_students = [s for s in pending_students if s.qualityCheck == "pass"]
+        print(f"Students with video uploaded and not yet processed: {len(pending_students)}")
+        
+        # Allow processing of students who either passed quality check OR haven't been tested yet
+        # This allows direct processing without requiring quality check first
+        quality_passed_students = [s for s in pending_students if getattr(s, 'qualityCheck', 'not_tested') in ["pass", "not_tested"]]
+        print(f"Students eligible for processing (passed quality or not tested): {len(quality_passed_students)}")
+        
         if not quality_passed_students:
             return {
                 "success": True,
-                "message": "No quality-passed students to process. Please run quality check first.",
+                "message": "No students available for processing. All students may have failed quality check or already been processed.",
                 "processed_count": 0
             }
         results = []
         processed_count = 0
         processed_students = []  # Define a list to track successfully processed students
         for student in quality_passed_students:
+            print(f"Processing student: {student.regNo} - {student.name}")
             try:
                 result = process_student_video(student)
+                print(f"Processing result for {student.regNo}: {result}")
             except Exception as e:
-                print(f"Exception in process_student_video: {e}")
+                print(f"Exception in process_student_video for {student.regNo}: {e}")
                 result = {"success": False, "error": str(e)}
             results.append({
                 "student": student.regNo,

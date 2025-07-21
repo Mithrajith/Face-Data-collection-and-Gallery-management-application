@@ -881,4 +881,59 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=404, detail="Report not found")
         return report_details
 
+    @app.get("/student-data/{dept}/{year}/quality-results", 
+             summary="Get existing quality check results")
+    async def get_existing_quality_results(dept: str, year: str):
+        """Get existing quality check results for students in a department-year"""
+        try:
+            students = get_students_in_folder(dept, year)
+            
+            passed_students = []
+            failed_students = []
+            borderline_students = []
+            total_with_quality = 0
+            
+            for student in students:
+                if hasattr(student, 'qualityCheck') and student.qualityCheck:
+                    total_with_quality += 1
+                    
+                    if hasattr(student, 'qualityCategory'):
+                        category = student.qualityCategory
+                    elif student.qualityCheck == 'pass':
+                        category = 'pass'
+                    else:
+                        category = 'fail'
+                    
+                    if category == 'pass':
+                        passed_students.append(student.regNo)
+                    elif category == 'borderline':
+                        issues = getattr(student, 'qualityIssues', [])
+                        borderline_students.append({
+                            'regNo': student.regNo,
+                            'issues': issues
+                        })
+                    else:  # fail
+                        failed_students.append(student.regNo)
+            
+            if total_with_quality == 0:
+                return {
+                    "success": False,
+                    "message": "No quality check results found",
+                    "has_results": False
+                }
+            
+            return {
+                "success": True,
+                "message": f"Found quality results for {total_with_quality} students",
+                "has_results": True,
+                "passed_students": passed_students,
+                "failed_students": failed_students,
+                "borderline_students": borderline_students,
+                "total_checked": total_with_quality,
+                "pass_rate": len(passed_students) / total_with_quality * 100 if total_with_quality > 0 else 0
+            }
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error getting quality results: {str(e)}")
+
     return app

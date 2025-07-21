@@ -348,6 +348,13 @@ def upload_video(session_id):
     with open(session_file, 'r') as f:
         session_data = json.load(f)
     
+    # Store original session data for re-attempting users (in case upload fails)
+    original_session_data = session_data.copy()
+    is_reattempting_user = session_data.get("videoUploaded", False)
+    
+    if is_reattempting_user:
+        print(f"Re-attempting user {student_id}: Preserving original session data in case of upload failure")
+    
     # Save the original WebM video (temporary)
     webm_filename = f"{student_id}.webm"
     webm_path = os.path.join(student_dir, webm_filename)
@@ -355,6 +362,14 @@ def upload_video(session_id):
     
     # Verify the WebM file was saved successfully
     if not os.path.exists(webm_path):
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": "Failed to save WebM video file"
@@ -364,6 +379,14 @@ def upload_video(session_id):
     print(f"Saved WebM video to {webm_path} ({webm_size} bytes)")
     
     if webm_size == 0:
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": "WebM video file is empty"
@@ -479,6 +502,14 @@ def upload_video(session_id):
         
         if not conversion_successful:
             print("All FFmpeg conversion attempts failed")
+            # Restore original session data for re-attempting users
+            if is_reattempting_user:
+                try:
+                    with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                        json.dump(original_session_data, f, indent=2)
+                    print(f"Restored original session data for re-attempting user {student_id}")
+                except Exception as restore_error:
+                    print(f"Warning: Could not restore original session data: {restore_error}")
             return jsonify({
                 "success": False,
                 "message": f"Failed to convert video. Tried multiple codecs but none worked. Last error: {process.stderr}"
@@ -488,6 +519,14 @@ def upload_video(session_id):
         
         # Verify the MP4 file was created and has content
         if not os.path.exists(mp4_path):
+            # Restore original session data for re-attempting users
+            if is_reattempting_user:
+                try:
+                    with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                        json.dump(original_session_data, f, indent=2)
+                    print(f"Restored original session data for re-attempting user {student_id}")
+                except Exception as restore_error:
+                    print(f"Warning: Could not restore original session data: {restore_error}")
             return jsonify({
                 "success": False,
                 "message": "MP4 file was not created successfully"
@@ -495,12 +534,25 @@ def upload_video(session_id):
             
         mp4_size = os.path.getsize(mp4_path)
         if mp4_size == 0:
+            # Restore original session data for re-attempting users
+            if is_reattempting_user:
+                try:
+                    with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                        json.dump(original_session_data, f, indent=2)
+                    print(f"Restored original session data for re-attempting user {student_id}")
+                except Exception as restore_error:
+                    print(f"Warning: Could not restore original session data: {restore_error}")
             return jsonify({
                 "success": False,
                 "message": "MP4 file is empty"
             }), 500
             
         print(f"MP4 file created successfully: {mp4_path} ({mp4_size} bytes)")
+        
+        if is_reattempting_user:
+            print(f"Re-attempting user {student_id}: Will update JSON only after successful upload")
+        else:
+            print(f"New user {student_id}: Will update JSON after successful upload")
         
         # Update session data - only mark video as uploaded, no face extraction
         session_data["videoUploaded"] = True
@@ -520,8 +572,11 @@ def upload_video(session_id):
         if year_display:
             session_data["year_display"] = year_display
         
-        # Save updated session data with student reg number as filename only
+        # For re-attempting users: Only update JSON after successful video upload
+        # For new users: Update JSON immediately after successful video upload (existing behavior)
         student_json_file = os.path.join(student_dir, f"{student_id}.json")
+        
+        # Save updated session data with student reg number as filename only
         with open(student_json_file, 'w') as f:
             json.dump(session_data, f, indent=2)
         
@@ -560,30 +615,70 @@ def upload_video(session_id):
     
     except subprocess.TimeoutExpired:
         print(f"FFmpeg conversion timed out after 2 minutes")
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": "Video conversion timed out. The video file might be too large or corrupted."
         }), 500
     except FileNotFoundError:
         print(f"FFmpeg not found in system PATH")
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": "FFmpeg is not installed or not found in system PATH."
         }), 500
     except PermissionError as e:
         print(f"Permission error during video processing: {e}")
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": f"Permission error: Unable to write video files. Check directory permissions."
         }), 500
     except OSError as e:
         print(f"OS error during video processing: {e}")
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": f"System error during video processing: {str(e)}"
         }), 500
     except json.JSONDecodeError as e:
         print(f"JSON error when updating session data: {e}")
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": f"Error updating session data: Invalid JSON format."
@@ -592,6 +687,14 @@ def upload_video(session_id):
         print(f"Unexpected error processing video: {e}")
         import traceback
         traceback.print_exc()
+        # Restore original session data for re-attempting users
+        if is_reattempting_user:
+            try:
+                with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
+                    json.dump(original_session_data, f, indent=2)
+                print(f"Restored original session data for re-attempting user {student_id}")
+            except Exception as restore_error:
+                print(f"Warning: Could not restore original session data: {restore_error}")
         return jsonify({
             "success": False,
             "message": f"Unexpected error processing video: {str(e)}"
