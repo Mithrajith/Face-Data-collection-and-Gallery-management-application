@@ -2361,7 +2361,37 @@ async function loadExistingQualityResults(dept, year) {
     try {
         console.log(`Loading existing quality results for ${dept} ${year}`);
         
-        // Fetch quality check reports for the department and year
+        // Method 1: Try to get the latest results directly from database
+        const directResponse = await fetch(`${API_BASE_URL}/student-data/${dept}/${year}/quality-results`);
+        if (directResponse.ok) {
+            const directData = await directResponse.json();
+            console.log("Direct quality results response:", directData);
+            
+            if (directData.has_results) {
+                console.log("Found quality results from database/filesystem");
+                displayQualityResults(directData);
+                
+                // Store results globally
+                window.qualityCheckResults = directData;
+                
+                // Show the quality results section
+                const qualityResultsSection = document.getElementById('qualityCheckResults');
+                if (qualityResultsSection) {
+                    qualityResultsSection.style.display = 'block';
+                }
+                
+                // Update the quality check button text to indicate re-check
+                const btnQualityCheck = document.getElementById('btnQualityCheck');
+                if (btnQualityCheck) {
+                    btnQualityCheck.innerHTML = '<i class="fas fa-shield-alt me-2"></i>Re-check Quality';
+                }
+                
+                console.log("Successfully loaded and displayed existing quality results");
+                return;
+            }
+        }
+        
+        // Method 2: Fallback to quality reports API (legacy)
         const response = await fetch(`${API_BASE_URL}/api/quality-reports?department=${dept}&year=${year}`);
         
         if (!response.ok) {
@@ -2394,6 +2424,8 @@ async function loadExistingQualityResults(dept, year) {
         
         // Convert database format to expected format for display
         const qualityResult = {
+            success: true,
+            has_results: true,
             passed_students: [],
             failed_students: [],
             borderline_students: [],
@@ -2410,7 +2442,7 @@ async function loadExistingQualityResults(dept, year) {
             } else if (result.status === 'borderline') {
                 qualityResult.borderline_students.push({
                     regNo: result.student_id,
-                    issues: result.issues ? result.issues.split(', ') : []
+                    issues: result.issues ? JSON.parse(result.issues || '[]') : []
                 });
             }
         });

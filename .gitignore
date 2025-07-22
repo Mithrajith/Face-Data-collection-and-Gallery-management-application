@@ -18,3 +18,4 @@ src/checkpoints/
 
 *.log
 populate.py
+backups/

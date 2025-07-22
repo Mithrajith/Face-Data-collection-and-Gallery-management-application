@@ -6,7 +6,7 @@ from ultralytics import YOLO
 
 from config.settings import DEFAULT_YOLO_PATH
 
-def extract_frames(video_path: str, output_dir: str, max_frames: int = 1000, interval: int = 1) -> List[str]:
+def extract_frames(video_path: str, output_dir: str, max_frames: int = 200, interval: int = 1) -> List[str]:
     """
     Extract frames from a video at specified intervals
     

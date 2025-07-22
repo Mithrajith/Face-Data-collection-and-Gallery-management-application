@@ -48,7 +48,7 @@ def detect_and_save_faces(video_path, output_dir="/mnt/data/PROJECTS/face-rec-li
             break
         
         frame_count += 1
-        if frame_count % 15 != 0:  # Process every 15th frame to save compute
+        if frame_count % 2 != 0:  # Process every 15th frame to save compute
             continue
         
         # Detect faces on the original resolution 

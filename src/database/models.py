@@ -334,11 +334,27 @@ def get_database_stats() -> Dict[str, Any]:
         }
 
 def save_quality_check_report(report_data: Dict[str, Any]) -> int:
-    """Save a quality check report and its results to the database."""
+    """Save a quality check report and its results to the database. Overwrites existing report for same dept-year."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
         
-        # Insert the main report
+        # Check if a report already exists for this department-year combination
+        cursor.execute('''
+        SELECT id FROM quality_check_reports 
+        WHERE department = ? AND year = ?
+        ORDER BY created_at DESC LIMIT 1
+        ''', (report_data['department'], report_data['year']))
+        
+        existing_report = cursor.fetchone()
+        
+        if existing_report:
+            # Delete existing report and its results
+            report_id = existing_report['id']
+            cursor.execute('DELETE FROM quality_check_results WHERE report_id = ?', (report_id,))
+            cursor.execute('DELETE FROM quality_check_reports WHERE id = ?', (report_id,))
+            print(f"Overwriting existing quality check report for {report_data['department']} {report_data['year']}")
+        
+        # Insert the new report
         cursor.execute('''
         INSERT INTO quality_check_reports (department, year, total_checked, passed_count, failed_count, borderline_count)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -431,3 +447,58 @@ def get_students_by_dept_and_batch(dept: str, batch: str):
         cursor.execute("SELECT * FROM students WHERE department_id = ? AND batch = ?", (dept, batch))
         print('[DEBUG] Executing query to get students by department and batch:', dept, batch)
         return [dict(row) for row in cursor.fetchall()]
+
+def get_existing_quality_results(department: str, year: str) -> Optional[Dict[str, Any]]:
+    """Get existing quality check results for a specific department-year combination."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # Get the most recent report for this department-year
+        cursor.execute('''
+        SELECT * FROM quality_check_reports 
+        WHERE department = ? AND year = ?
+        ORDER BY created_at DESC LIMIT 1
+        ''', (department, year))
+        
+        report = cursor.fetchone()
+        if not report:
+            return None
+        
+        report_dict = dict(report)
+        
+        # Get the detailed results
+        cursor.execute('''
+        SELECT student_id, status, issues FROM quality_check_results 
+        WHERE report_id = ?
+        ''', (report['id'],))
+        
+        results = cursor.fetchall()
+        
+        # Organize results by status
+        passed_students = []
+        failed_students = []
+        borderline_students = []
+        
+        for result in results:
+            if result['status'] == 'pass':
+                passed_students.append(result['student_id'])
+            elif result['status'] == 'fail':
+                failed_students.append(result['student_id'])
+            elif result['status'] == 'borderline':
+                issues = json.loads(result['issues']) if result['issues'] else []
+                borderline_students.append({
+                    'regNo': result['student_id'],
+                    'issues': issues
+                })
+        
+        return {
+            "success": True,
+            "message": f"Found existing quality results for {department} {year}",
+            "has_results": True,
+            "passed_students": passed_students,
+            "failed_students": failed_students,
+            "borderline_students": borderline_students,
+            "total_checked": report_dict['total_checked'],
+            "pass_rate": (len(passed_students) / report_dict['total_checked'] * 100) if report_dict['total_checked'] > 0 else 0,
+            "created_at": report_dict['created_at']
+        }

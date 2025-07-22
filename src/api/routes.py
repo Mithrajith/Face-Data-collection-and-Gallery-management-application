@@ -883,9 +883,16 @@ def create_app() -> FastAPI:
 
     @app.get("/student-data/{dept}/{year}/quality-results", 
              summary="Get existing quality check results")
-    async def get_existing_quality_results(dept: str, year: str):
-        """Get existing quality check results for students in a department-year"""
+    async def get_existing_quality_results_endpoint(dept: str, year: str):
+        """Get existing quality check results for students in a department-year from database"""
         try:
+            # First try to get results from database
+            db_results = database.get_existing_quality_results(dept, year)
+            
+            if db_results and db_results.get('has_results'):
+                return db_results
+            
+            # Fallback: check file system for legacy data
             students = get_students_in_folder(dept, year)
             
             passed_students = []
@@ -924,7 +931,7 @@ def create_app() -> FastAPI:
             
             return {
                 "success": True,
-                "message": f"Found quality results for {total_with_quality} students",
+                "message": f"Found legacy quality results for {total_with_quality} students",
                 "has_results": True,
                 "passed_students": passed_students,
                 "failed_students": failed_students,
