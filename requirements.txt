@@ -23,3 +23,4 @@ rich
 python-multipart
 apscheduler
 python-dotenv
+mediapipe

@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, Any
 import json
 from pathlib import Path
 from database.models import save_quality_check_report
+import mediapipe as mp
 
 class VideoQualityChecker:
     def __init__(self, yolo_model_path: str):
@@ -90,6 +91,50 @@ class VideoQualityChecker:
         
         return len(unique_angles)
     
+    def estimate_face_pose(self, image: np.ndarray, bbox: Tuple[int, int, int, int]) -> str:
+        """
+        Estimate face pose (front, left, right, up, down) using MediaPipe landmarks.
+        Returns a string label for the pose.
+        """
+        mp_face_mesh = mp.solutions.face_mesh
+        with mp_face_mesh.FaceMesh(static_image_mode=True) as face_mesh:
+            x1, y1, x2, y2 = bbox
+            face_img = image[y1:y2, x1:x2]
+            results = face_mesh.process(cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB))
+            if not results.multi_face_landmarks:
+                return "unknown"
+            landmarks = results.multi_face_landmarks[0].landmark
+
+            # Example: Use nose tip and eyes to estimate yaw/pitch
+            nose_tip = landmarks[1]
+            left_eye = landmarks[33]
+            right_eye = landmarks[263]
+
+            # Calculate simple yaw (left/right) and pitch (up/down)
+            eye_dx = right_eye.x - left_eye.x
+            nose_to_eye_y = nose_tip.y - ((left_eye.y + right_eye.y) / 2)
+
+            if abs(eye_dx) > 0.08:  # Threshold for left/right
+                return "left" if eye_dx < 0 else "right"
+            elif nose_to_eye_y > 0.04:
+                return "down"
+            elif nose_to_eye_y < -0.04:
+                return "up"
+            else:
+                return "front"
+
+    def check_pose_diversity(self, frames: List[np.ndarray], faces_data: List[Dict]) -> List[str]:
+        """
+        Check for presence of all required face poses in the video.
+        Returns a list of detected pose categories.
+        """
+        pose_categories = set()
+        for frame, face in zip(frames, faces_data):
+            pose = self.estimate_face_pose(frame, face['bbox'])
+            if pose != "unknown":
+                pose_categories.add(pose)
+        return list(pose_categories)
+
     def check_single_video_quality(self, video_path: str) -> Dict[str, Any]:
         """Check quality of a single video file"""
         if not os.path.exists(video_path):
@@ -142,7 +187,24 @@ class VideoQualityChecker:
                             'flags': frame_flags
                         })
                     break  # Stop further processing if critical failg
+                # Check blur
+                blur_score = self.detect_blur(frame)
+                blur_scores.append(blur_score)
+                if blur_score < self.quality_thresholds['min_blur_score']:
+                    frame_flags.append("Blurry frame")
 
+                # Check contrast
+                contrast_score = self.check_contrast(frame)
+                contrast_scores.append(contrast_score)
+                if contrast_score < self.quality_thresholds['min_contrast']:
+                    frame_flags.append("Low contrast")
+                
+                #check motion blur
+                motion_blur_score = self.detect_motion_blur(frame)
+                motion_blur_scores.append(motion_blur_score)
+                if motion_blur_score > self.quality_thresholds['max_motion_blur']:
+                    frame_flags.append("Motion blur detected")
+                
                 # Store face data for angle detection
                 for box in results[0].boxes:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
@@ -155,23 +217,7 @@ class VideoQualityChecker:
             else:
                 frame_flags.append("No face detected")
 
-            # Check blur
-            blur_score = self.detect_blur(frame)
-            blur_scores.append(blur_score)
-            if blur_score < self.quality_thresholds['min_blur_score']:
-                frame_flags.append("Blurry frame")
 
-            # Check contrast
-            contrast_score = self.check_contrast(frame)
-            contrast_scores.append(contrast_score)
-            if contrast_score < self.quality_thresholds['min_contrast']:
-                frame_flags.append("Low contrast")
-
-            # Check motion blur
-            motion_blur_score = self.detect_motion_blur(frame)
-            motion_blur_scores.append(motion_blur_score)
-            if motion_blur_score > self.quality_thresholds['max_motion_blur']:
-                frame_flags.append("Motion blur detected")
 
             # Save all flags for this frame (for UI display)
             if frame_flags:
@@ -232,6 +278,13 @@ class VideoQualityChecker:
             category = 'pass'
 
         all_issues = critical_issues + major_issues + minor_issues
+
+        # After collecting faces_data and frames:
+        pose_categories = self.check_pose_diversity(frames, faces_data)
+        required_poses = {"front", "left", "right", "up", "down"}
+        missing_poses = required_poses - set(pose_categories)
+        if missing_poses:
+            minor_issues.append(f"Missing face angles: {', '.join(missing_poses)}")
 
         return {
             'overall_quality': 'pass' if category == 'pass' else 'fail',
