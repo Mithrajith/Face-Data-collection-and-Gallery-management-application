@@ -15,7 +15,7 @@ class VideoQualityChecker:
         self.quality_thresholds = {
             'min_faces_detected': 5,  # Minimum faces across all sampled frames
             'max_faces_per_frame': 1,  # Maximum faces per frame (to avoid multiple people)
-            'min_blur_score': 50,  # Minimum blur score (generous threshold)
+            'min_blur_score': 30,  # Minimum blur score (generous threshold)
             'min_contrast': 20,  # Minimum contrast (generous threshold)
             'min_face_angles': 1,  # Minimum different face angles/poses
             'min_face_size': 60,  # Minimum face size (pixels)
@@ -91,37 +91,41 @@ class VideoQualityChecker:
         
         return len(unique_angles)
     
-    def estimate_face_pose(self, image: np.ndarray, bbox: Tuple[int, int, int, int]) -> str:
+    def estimate_face_pose(self, image: np.ndarray, bbox: Tuple[int, int, int, int]) -> Tuple[str, float, float, float]:
         """
-        Estimate face pose (front, left, right, up, down) using MediaPipe landmarks.
-        Returns a string label for the pose.
+        Estimate face pose: 'front' (was 'down'), 'side' (was 'left' or 'right'), or 'unknown'.
+        Returns a tuple: (label, yaw, pitch, roll)
         """
         mp_face_mesh = mp.solutions.face_mesh
         with mp_face_mesh.FaceMesh(static_image_mode=True) as face_mesh:
-            x1, y1, x2, y2 = bbox
-            face_img = image[y1:y2, x1:x2]
-            results = face_mesh.process(cv2.cvtColor(face_img, cv2.COLOR_BGR2RGB))
+            results = face_mesh.process(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
             if not results.multi_face_landmarks:
-                return "unknown"
+                return "unknown", 0.0, 0.0, 0.0
             landmarks = results.multi_face_landmarks[0].landmark
 
-            # Example: Use nose tip and eyes to estimate yaw/pitch
             nose_tip = landmarks[1]
             left_eye = landmarks[33]
             right_eye = landmarks[263]
 
-            # Calculate simple yaw (left/right) and pitch (up/down)
             eye_dx = right_eye.x - left_eye.x
             nose_to_eye_y = nose_tip.y - ((left_eye.y + right_eye.y) / 2)
 
-            if abs(eye_dx) > 0.08:  # Threshold for left/right
-                return "left" if eye_dx < 0 else "right"
-            elif nose_to_eye_y > 0.04:
-                return "down"
-            elif nose_to_eye_y < -0.04:
-                return "up"
+            yaw = eye_dx
+            pitch = nose_to_eye_y
+            roll = 0.0
+
+            
+            # Only two types: 'side' (left or right), 'front' (was 'down'), else 'unknown'
+            SIDE_YAW_THRESHOLD = 0.10
+            if abs(yaw) > SIDE_YAW_THRESHOLD:
+                angle_label = "front"
+            elif abs(yaw) <= SIDE_YAW_THRESHOLD and abs(pitch) <= 0.12:
+                angle_label = "side"
             else:
-                return "front"
+                angle_label = "unknown"
+
+            print(f"[DEBUG] Yaw: {yaw:.2f}, Pitch: {pitch:.2f}, Roll: {roll:.2f}, Label: {angle_label}")
+            return angle_label, yaw, pitch, roll
 
     def check_pose_diversity(self, frames: List[np.ndarray], faces_data: List[Dict]) -> List[str]:
         """
@@ -281,7 +285,7 @@ class VideoQualityChecker:
 
         # After collecting faces_data and frames:
         pose_categories = self.check_pose_diversity(frames, faces_data)
-        required_poses = {"front", "left", "right", "up", "down"}
+        required_poses = {"front", "side"}
         missing_poses = required_poses - set(pose_categories)
         if missing_poses:
             minor_issues.append(f"Missing face angles: {', '.join(missing_poses)}")
