@@ -12,7 +12,8 @@ from ultralytics import YOLO
 from ml.embeddings import load_model, extract_embedding, transform
 from utils.image_utils import augment_face_image
 
-def create_gallery(model_path, data_dir, output_path, augment_ratio=0.0, augs_per_image=3):
+
+def create_gallery(model_path, data_dir, output_path, augment_ratio, augs_per_image=4):
     """Create a face recognition gallery from preprocessed face images"""
     # Load model
     model, device = load_model(model_path)
@@ -82,7 +83,7 @@ def create_gallery(model_path, data_dir, output_path, augment_ratio=0.0, augs_pe
     print(f"Gallery saved to {output_path}")
     return gallery
 
-def update_gallery(model_path, gallery_path, new_data_dir, output_path=None, augment_ratio=0.0, augs_per_image=3):
+def update_gallery(model_path, gallery_path, new_data_dir, output_path=None, augment_ratio=0.5, augs_per_image=4):
     """Update an existing gallery with new identities"""
     if output_path is None:
         output_path = gallery_path
