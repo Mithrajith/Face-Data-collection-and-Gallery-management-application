@@ -22,7 +22,7 @@ class VideoQualityChecker:
             'max_motion_blur': 80,  # Maximum motion blur threshold (generous)
         }
     
-    def sample_frames(self, video_path: str, num_samples: int = 15) -> List[np.ndarray]:
+    def sample_frames(self, video_path: str, num_samples: int = 200) -> List[np.ndarray]:
         """Sample 15 frames from different points in the video"""
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -139,7 +139,7 @@ class VideoQualityChecker:
                 pose_categories.add(pose)
         return list(pose_categories)
 
-    def check_single_video_quality(self, video_path: str) -> Dict[str, Any]:
+    def check_single_video_quality(self, video_path: str, save_failed_frames: bool = False) -> Dict[str, Any]:
         """Check quality of a single video file"""
         if not os.path.exists(video_path):
             return {
@@ -149,8 +149,8 @@ class VideoQualityChecker:
                 'details': {}
             }
 
-        # Sample 15 frames from the video
-        frames = self.sample_frames(video_path, 15)
+        # Sample more frames from the video (or use 200 for more coverage)
+        frames = self.sample_frames(video_path, 200)
         if not frames:
             return {
                 'overall_quality': 'fail',
@@ -158,6 +158,20 @@ class VideoQualityChecker:
                 'error': 'Could not extract frames from video',
                 'details': {}
             }
+
+        # Create failed frames directory if saving is enabled
+        failed_frames_dir = None
+        if save_failed_frames:
+            video_dir = os.path.dirname(video_path)
+            failed_frames_dir = os.path.join(video_dir, "failed_frames")
+            
+            # Clean up old failed frames if directory exists
+            if os.path.exists(failed_frames_dir):
+                for old_frame in os.listdir(failed_frames_dir):
+                    if old_frame.endswith(('.jpg', '.png', '.jpeg')):
+                        os.remove(os.path.join(failed_frames_dir, old_frame))
+            
+            os.makedirs(failed_frames_dir, exist_ok=True)
 
         # Initialize quality metrics
         total_faces = 0
@@ -172,9 +186,10 @@ class VideoQualityChecker:
         # Process each sampled frame
         for frame_idx, frame in enumerate(frames):
             # Detect faces
-            results = self.yolo_model(frame, conf=0.7)
+            results = self.yolo_model(frame, conf=0.5)
             frame_faces = 0
             frame_flags = []
+            frame_has_issues = False
 
             if len(results) > 0 and hasattr(results[0], 'boxes') and len(results[0].boxes) > 0:
                 frame_faces = len(results[0].boxes)
@@ -184,44 +199,70 @@ class VideoQualityChecker:
                     multiple_faces_count += 1
                     multiple_faces_critical = True
                     frame_flags.append("Multiple faces detected (critical fail)")
+                    frame_has_issues = True
                     # Save all flags for this frame (for UI display)
                     if frame_flags:
                         problem_flags.append({
                             'frame': frame_idx,
                             'flags': frame_flags
                         })
-                    break  # Stop further processing if critical failg
+                    
+                    # Save frame if it has critical issues
+                    if save_failed_frames and failed_frames_dir:
+                        frame_filename = f"frame_{frame_idx:03d}_multiple_faces.jpg"
+                        frame_path = os.path.join(failed_frames_dir, frame_filename)
+                        cv2.imwrite(frame_path, frame)
+                    
+                    break  # Stop further processing if critical fail
+                
                 # Check blur
                 blur_score = self.detect_blur(frame)
                 blur_scores.append(blur_score)
                 if blur_score < self.quality_thresholds['min_blur_score']:
                     frame_flags.append("Blurry frame")
+                    frame_has_issues = True
 
                 # Check contrast
                 contrast_score = self.check_contrast(frame)
                 contrast_scores.append(contrast_score)
                 if contrast_score < self.quality_thresholds['min_contrast']:
                     frame_flags.append("Low contrast")
+                    frame_has_issues = True
                 
-                #check motion blur
+                # Check motion blur
                 motion_blur_score = self.detect_motion_blur(frame)
                 motion_blur_scores.append(motion_blur_score)
                 if motion_blur_score > self.quality_thresholds['max_motion_blur']:
                     frame_flags.append("Motion blur detected")
+                    frame_has_issues = True
                 
-                # Store face data for angle detection
+                # Check face size
                 for box in results[0].boxes:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     face_width = x2 - x1
                     face_height = y2 - y1
+                    face_size = max(face_width, face_height)
+                    
+                    if face_size < self.quality_thresholds['min_face_size']:
+                        frame_flags.append("Face too small")
+                        frame_has_issues = True
+                    
                     faces_data.append({
                         'bbox': (x1, y1, x2, y2),
-                        'size': max(face_width, face_height)
+                        'size': face_size
                     })
             else:
                 frame_flags.append("No face detected")
+                frame_has_issues = True
 
-
+            # Save frame if it has any quality issues
+            if save_failed_frames and failed_frames_dir and frame_has_issues:
+                # Create filename with issues description
+                issues_text = "_".join([flag.lower().replace(" ", "_").replace("(", "").replace(")", "") for flag in frame_flags])
+                issues_text = issues_text[:50]  # Limit filename length
+                frame_filename = f"frame_{frame_idx:03d}_{issues_text}.jpg"
+                frame_path = os.path.join(failed_frames_dir, frame_filename)
+                cv2.imwrite(frame_path, frame)
 
             # Save all flags for this frame (for UI display)
             if frame_flags:
@@ -290,6 +331,11 @@ class VideoQualityChecker:
         if missing_poses:
             minor_issues.append(f"Missing face angles: {', '.join(missing_poses)}")
 
+        # Count saved failed frames
+        saved_frames_count = 0
+        if save_failed_frames and failed_frames_dir and os.path.exists(failed_frames_dir):
+            saved_frames_count = len([f for f in os.listdir(failed_frames_dir) if f.endswith(('.jpg', '.png', '.jpeg'))])
+
         return {
             'overall_quality': 'pass' if category == 'pass' else 'fail',
             'category': category,
@@ -306,7 +352,9 @@ class VideoQualityChecker:
                 'face_angles': face_angles,
                 'avg_face_size': avg_face_size,
                 'frames_analyzed': len(frames),
-                'problem_flags': problem_flags  # For UI: all frame-level problem flags
+                'problem_flags': problem_flags,  # For UI: all frame-level problem flags
+                'failed_frames_saved': saved_frames_count,
+                'failed_frames_directory': failed_frames_dir if save_failed_frames else None
             }
         }
     
@@ -379,8 +427,8 @@ class VideoQualityChecker:
                 
                 print(f"  Processing quality check for {student_id}")
                 
-                # Check video quality
-                quality_result = self.check_single_video_quality(video_path)
+                # Check video quality - enable frame saving for failed quality checks
+                quality_result = self.check_single_video_quality(video_path, save_failed_frames=True)
                 
                 # Update student JSON with quality check result
                 student_data['qualityCheck'] = quality_result['overall_quality']
