@@ -46,7 +46,7 @@ while True:
         break
 
     # Detect faces with YOLO
-    results = checker.yolo_model(frame, conf=0.7)
+    results = checker.yolo_model(frame, conf=0.45)
     face_bboxes = []
     face_angle_labels = []
     frame_angles_seen = set()

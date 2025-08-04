@@ -65,38 +65,38 @@ class VideoQualityChecker:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         return float(np.std(gray))
     
-    def detect_face_angles(self, faces_data: List[Dict]) -> int:
-        """Estimate number of different face angles based on bounding box variations"""
-        if len(faces_data) < 2:
-            return len(faces_data)
+    # def detect_face_angles(self, faces_data: List[Dict]) -> int:
+    #     """Estimate number of different face angles based on bounding box variations"""
+    #     if len(faces_data) < 2:
+    #         return len(faces_data)
         
-        # Calculate face aspect ratios and positions to estimate angles
-        angles = []
-        for face in faces_data:
-            bbox = face['bbox']
-            width = bbox[2] - bbox[0]
-            height = bbox[3] - bbox[1]
-            aspect_ratio = width / height if height > 0 else 1.0
-            center_x = (bbox[0] + bbox[2]) / 2
-            angles.append((aspect_ratio, center_x))
+    #     # Calculate face aspect ratios and positions to estimate angles
+    #     angles = []
+    #     for face in faces_data:
+    #         bbox = face['bbox']
+    #         width = bbox[2] - bbox[0]
+    #         height = bbox[3] - bbox[1]
+    #         aspect_ratio = width / height if height > 0 else 1.0
+    #         center_x = (bbox[0] + bbox[2]) / 2
+    #         angles.append((aspect_ratio, center_x))
         
-        # Group similar angles (simple clustering)
-        unique_angles = []
-        for angle in angles:
-            is_unique = True
-            for existing in unique_angles:
-                if (abs(angle[0] - existing[0]) < 0.2 and 
-                    abs(angle[1] - existing[1]) < 80):  # Generous angle grouping
-                    is_unique = False
-                    break
-            if is_unique:
-                unique_angles.append(angle)
+    #     # Group similar angles (simple clustering)
+    #     unique_angles = []
+    #     for angle in angles:
+    #         is_unique = True
+    #         for existing in unique_angles:
+    #             if (abs(angle[0] - existing[0]) < 0.2 and 
+    #                 abs(angle[1] - existing[1]) < 80):  # Generous angle grouping
+    #                 is_unique = False
+    #                 break
+    #         if is_unique:
+    #             unique_angles.append(angle)
         
-        return len(unique_angles)
+    #     return len(unique_angles)
     
     def estimate_face_pose(self, image: np.ndarray, bbox: Tuple[int, int, int, int]) -> Tuple[str, float, float, float]:
         """
-        Estimate face pose: 'front' (was 'down'), 'side' (was 'left' or 'right'), or 'unknown'.
+        Estimate face pose: 'front' , 'side' , or 'unknown'.
         Returns a tuple: (label, yaw, pitch, roll)
         """
         mp_face_mesh = mp.solutions.face_mesh
@@ -119,7 +119,7 @@ class VideoQualityChecker:
 
             
             # Only two types: 'side' (left or right), 'front' (was 'down'), else 'unknown'
-            SIDE_YAW_THRESHOLD = 0.10
+            SIDE_YAW_THRESHOLD = 0.15
             if abs(yaw) > SIDE_YAW_THRESHOLD:
                 angle_label = "front"
             elif abs(yaw) <= SIDE_YAW_THRESHOLD and abs(pitch) <= 0.12:
@@ -282,7 +282,7 @@ class VideoQualityChecker:
         avg_blur = np.mean(blur_scores) if blur_scores else 0
         avg_contrast = np.mean(contrast_scores) if contrast_scores else 0
         avg_motion_blur = np.mean(motion_blur_scores) if motion_blur_scores else 0
-        face_angles = self.detect_face_angles(faces_data)
+        # face_angles = self.detect_face_angles(faces_data)
         avg_face_size = np.mean([f['size'] for f in faces_data]) if faces_data else 0
 
         # Quality checks - categorize issues
@@ -309,8 +309,8 @@ class VideoQualityChecker:
             major_issues.append(f"Face too small in frame")
 
         # Minor issues
-        if face_angles < self.quality_thresholds['min_face_angles']:
-            minor_issues.append(f"Limited face angles")
+        # if face_angles < self.quality_thresholds['min_face_angles']:
+        #     minor_issues.append(f"Limited face angles")
 
         if multiple_faces_count > 0 and not multiple_faces_critical:
             minor_issues.append(f"Multiple people in some frames")
@@ -355,7 +355,6 @@ class VideoQualityChecker:
                 'avg_blur_score': avg_blur,
                 'avg_contrast': avg_contrast,
                 'avg_motion_blur': avg_motion_blur,
-                'face_angles': face_angles,
                 'avg_face_size': avg_face_size,
                 'frames_analyzed': len(frames),
                 'problem_flags': problem_flags,  # For UI: all frame-level problem flags
@@ -363,6 +362,7 @@ class VideoQualityChecker:
                 'failed_frames_directory': failed_frames_dir if save_failed_frames else None
             }
         }
+    
     
     def check_student_data_quality(self, dept: str, year: str, student_data_dir: str) -> Dict[str, Any]:
         """Check quality for all students in a department-year folder"""
