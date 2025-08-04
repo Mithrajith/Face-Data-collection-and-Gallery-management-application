@@ -15,7 +15,7 @@ class VideoQualityChecker:
         self.quality_thresholds = {
             'min_faces_detected': 5,  # Minimum faces across all sampled frames
             'max_faces_per_frame': 1,  # Maximum faces per frame (to avoid multiple people)
-            'min_blur_score': 30,  # Minimum blur score (generous threshold)
+            'min_blur_score': 15,  # Minimum blur score (generous threshold)
             'min_contrast': 20,  # Minimum contrast (generous threshold)
             'min_face_angles': 1,  # Minimum different face angles/poses
             'min_face_size': 60,  # Minimum face size (pixels)
@@ -52,15 +52,18 @@ class VideoQualityChecker:
         return laplacian_var
     
     def detect_motion_blur(self, image: np.ndarray) -> float:
-        """Detect motion blur using edge detection"""
+        """
+        Detect motion blur using edge detection.
+        Motion blur causes edges to be less distinct. The Canny edge detector finds edges in the image; if the image is sharp, there will be more strong edges and the mean value will be higher. If the image is motion blurred, edges are weaker and the mean value is lower. A higher threshold means more frames will pass the motion blur check.
+        """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         edges = cv2.Canny(gray, 50, 150)
-        return np.mean(edges)
+        return float(np.mean(edges))
     
     def check_contrast(self, image: np.ndarray) -> float:
         """Check image contrast using standard deviation (generous threshold)"""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        return np.std(gray)
+        return float(np.std(gray))
     
     def detect_face_angles(self, faces_data: List[Dict]) -> int:
         """Estimate number of different face angles based on bounding box variations"""
@@ -185,8 +188,11 @@ class VideoQualityChecker:
 
         # Process each sampled frame
         for frame_idx, frame in enumerate(frames):
+            # Normalize frame for YOLO: convert to RGB and scale pixel values to [0,1]
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame_norm = frame_rgb.astype(np.float32) / 255.0
             # Detect faces
-            results = self.yolo_model(frame, conf=0.5)
+            results = self.yolo_model(frame_norm, conf=0.45)
             frame_faces = 0
             frame_flags = []
             frame_has_issues = False
