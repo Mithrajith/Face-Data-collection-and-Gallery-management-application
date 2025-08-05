@@ -25,7 +25,7 @@ def run_periodic_quality_checks():
         
         for folder in folders:
             # Assumes folder names are in 'dept_year' format
-            parts = folder.split('_')
+            parts = folder['folder'].split('_')
             if len(parts) == 2:
                 dept, year = parts
                 logger.info(f"Checking quality for {dept} - {year}")
