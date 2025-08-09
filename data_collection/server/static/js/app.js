@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         name: null, // Add name to state
         year: null,
         dept: null,
+        section: null, // Add section to state
         mediaRecorder: null,
         recordedChunks: [],
         stream: null,
@@ -139,10 +140,23 @@ async function handleFormSubmit(event) {
     state.name = document.getElementById('name').value; // Get the name from the form
     state.year = document.getElementById('year').value; // Get the year from the form
     state.dept = document.getElementById('dept').value;
+    state.section = document.getElementById('section').value.trim().toUpperCase(); // Get and preprocess section
 
     // Validate that year field has a value
     if (!state.year) {
         alert('Please enter a valid registration number to auto-fill the year field.');
+        return;
+    }
+
+    // Validate section field
+    if (!state.section) {
+        alert('Please enter your section.');
+        return;
+    }
+
+    // Validate section format (should be 1 character, letters only)
+    if (!/^[A-Z]$/.test(state.section)) {
+        alert('Section should be 1 character (letter only).');
         return;
     }
 
@@ -165,7 +179,8 @@ async function handleFormSubmit(event) {
                 studentId: state.studentId,
                 name: state.name, // Send name to backend
                 year: passOutYear,
-                dept: state.dept
+                dept: state.dept,
+                section: state.section // Send section to backend
             })
         });
         

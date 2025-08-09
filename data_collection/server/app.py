@@ -261,9 +261,19 @@ def start_session():
     name = data.get('name')  # Full Name
     year_display = data.get('year')  # This is now the display format like "2023 - 2027"
     dept_name = data.get('dept')
+    section = data.get('section', '').strip().upper()  # Section with preprocessing
     
     if not all([student_id, dept_name]):
         return jsonify({"error": "Student ID and department are required"}), 400
+    
+    # Validate section field
+    if not section:
+        return jsonify({"error": "Section is required"}), 400
+    
+    # Validate section format (1 character, letters only)
+    import re
+    if not re.match(r'^[A-Z]$', section):
+        return jsonify({"error": "Section should be 1 character (letter only)"}), 400
     
     # Extract department code from registration number
     dept_code = extract_dept_code_from_regno(student_id)
@@ -295,6 +305,7 @@ def start_session():
         "year_display": year_display,  # Store the display format
         "dept": dept_name,
         "dept_id": dept_code,  # Store the department code
+        "section": section,  # Store the section
         "batch": f"Batch{graduation_year}",
         "startTime": datetime.now().isoformat(),
         "videoUploaded": False,
@@ -307,6 +318,14 @@ def start_session():
     # Save session data with student ID as filename only
     with open(os.path.join(student_dir, f"{student_id}.json"), 'w') as f:
         json.dump(session_data, f, indent=2)
+    
+    # Save student data to database
+    try:
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+        from src.database.models import save_student_to_database
+        save_student_to_database(session_data)
+    except Exception as e:
+        print(f"Error saving student to database: {e}")
     
     return jsonify({"sessionId": session_id, "studentId": student_id}), 200
 

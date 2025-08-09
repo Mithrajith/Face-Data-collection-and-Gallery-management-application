@@ -79,9 +79,17 @@ def init_db():
             department TEXT,
             batch TEXT,
             regulation TEXT,
-            semester TEXT
+            semester TEXT,
+            section TEXT DEFAULT NULL
         )
         ''')
+        
+        # Add section column to existing students table if it doesn't exist
+        try:
+            cursor.execute("ALTER TABLE students ADD COLUMN section TEXT DEFAULT NULL")
+        except sqlite3.OperationalError:
+            # Column already exists
+            pass
 
         # Insert default data if tables are empty
         cursor.execute("SELECT COUNT(*) FROM batch_years")
@@ -447,6 +455,48 @@ def get_students_by_dept_and_batch(dept: str, batch: str):
         cursor.execute("SELECT * FROM students WHERE department_id = ? AND batch = ?", (dept, batch))
         print('[DEBUG] Executing query to get students by department and batch:', dept, batch)
         return [dict(row) for row in cursor.fetchall()]
+
+def save_student_to_database(student_data: dict) -> bool:
+    """Save student data to the database."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            # Check if student already exists
+            cursor.execute("SELECT id FROM students WHERE register_no = ?", (student_data.get('regNo'),))
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Update existing student with section data
+                cursor.execute("""
+                    UPDATE students 
+                    SET name = ?, department = ?, batch = ?, section = ?
+                    WHERE register_no = ?
+                """, (
+                    student_data.get('name'),
+                    student_data.get('dept'),
+                    student_data.get('batch'),
+                    student_data.get('section'),
+                    student_data.get('regNo')
+                ))
+            else:
+                # Insert new student
+                cursor.execute("""
+                    INSERT INTO students (register_no, name, department, batch, section)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    student_data.get('regNo'),
+                    student_data.get('name'),
+                    student_data.get('dept'),
+                    student_data.get('batch'),
+                    student_data.get('section')
+                ))
+            
+            conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error saving student to database: {e}")
+            conn.rollback()
+            return False
 
 def get_existing_quality_results(department: str, year: str) -> Optional[Dict[str, Any]]:
     """Get existing quality check results for a specific department-year combination."""
