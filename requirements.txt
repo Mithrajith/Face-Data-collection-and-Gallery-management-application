@@ -4,8 +4,8 @@ Flask
 flask_cors
 asgiref
 numpy
-opencv_python
-opencv_python_headless
+opencv-python
+# opencv_python_headless
 pandas
 Pillow
 psutil

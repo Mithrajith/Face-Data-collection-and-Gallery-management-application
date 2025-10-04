@@ -22,7 +22,7 @@ class VideoQualityChecker:
             'max_motion_blur': 80,  # Maximum motion blur threshold (generous)
         }
     
-    def sample_frames(self, video_path: str, num_samples: int = 200) -> List[np.ndarray]:
+    def sample_frames(self, video_path: str, num_samples: int = 50) -> List[np.ndarray]:
         """Sample 15 frames from different points in the video"""
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -189,10 +189,10 @@ class VideoQualityChecker:
         # Process each sampled frame
         for frame_idx, frame in enumerate(frames):
             # Normalize frame for YOLO: convert to RGB and scale pixel values to [0,1]
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame_norm = frame_rgb.astype(np.float32) / 255.0
-            # Detect faces
-            results = self.yolo_model(frame_norm, conf=0.45)
+            # frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # frame_norm = frame_rgb.astype(np.float32) / 255.0
+            # # Detect faces
+            results = self.yolo_model(frame, conf = 0.65)
             frame_faces = 0
             frame_flags = []
             frame_has_issues = False
